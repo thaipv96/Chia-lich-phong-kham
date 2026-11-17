@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Công cụ tính lịch hẹn bệnh nhân — by Bác sĩ Phạm Văn Thái">
+<title>Công cụ tính lịch hẹn bệnh nhân</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231e40af'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-size='16' fill='white' font-weight='bold' font-family='Arial'%3ELH%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<style>
+:root{
+  --primary:#1e40af;--primary-light:#3b82f6;--success:#059669;--success-hover:#047857;
+  --warn:#f59e0b;--warn-bg:#fef3c7;--warn-fg:#78350f;--danger:#dc2626;--danger-bg:#fee2e2;--danger-fg:#7f1d1d;
+  --purple:#7c3aed;--purple-hover:#6d28d9;--bg:#f4f6f9;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+header h1{margin:0 0 4px;font-size:22px;display:flex;align-items:center;gap:8px;}
+header p{margin:0;opacity:.9;font-size:13px;font-style:italic;}
+.app{display:grid;grid-template-columns:380px minmax(0,1fr);gap:20px;padding:20px;max-width:1680px;margin:0 auto;}
+@media (max-width:960px){.app{grid-template-columns:1fr;}}
+.form,.preview{background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.form{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow-y:auto;}
+.form h2,.preview h2{margin:0 0 16px;font-size:15px;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px;color:#334155;}
+input[type=number],input[type=date],textarea{width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);transition:border-color .15s,box-shadow .15s;}
+input:focus,textarea:focus{outline:none;border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+input[readonly]{background:#f1f5f9;color:var(--muted);cursor:not-allowed;}
+fieldset{border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px;margin:12px 0;}
+fieldset legend{font-size:12px;color:var(--muted);padding:0 4px;}
+fieldset label{display:inline-flex;align-items:center;gap:4px;margin:0 16px 0 0;font-weight:500;cursor:pointer;}
+fieldset input{margin:0;cursor:pointer;}
+.hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.55;}
+.hint code{background:#f1f5f9;padding:1px 5px;border-radius:3px;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#0f172a;}
+button{margin-top:14px;padding:10px 16px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:background .15s,opacity .15s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+button:disabled{background:#94a3b8 !important;color:#fff !important;cursor:not-allowed;opacity:.85;}
+#previewBtn{background:var(--primary-light);color:#fff;}
+#previewBtn:hover:not(:disabled){background:#2563eb;}
+#previewBtn.dirty{animation:pulse 1.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.6);}50%{box-shadow:0 0 0 8px rgba(59,130,246,0);}}
+#exportBtn{background:var(--success);color:#fff;}
+#exportBtn:hover:not(:disabled){background:var(--success-hover);}
+#resetBtn{background:#e2e8f0;color:#334155;margin-top:8px;}
+#resetBtn:hover{background:#cbd5e1;}
+#printBtn{width:auto;margin:0;padding:8px 14px;background:var(--purple);color:#fff;font-size:13px;white-space:nowrap;}
+#printBtn:hover:not(:disabled){background:var(--purple-hover);}
+.warn{background:var(--warn-bg);border-left:4px solid var(--warn);padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:10px;color:var(--warn-fg);line-height:1.5;}
+.warn strong{display:block;margin-bottom:3px;font-weight:700;}
+.warn.error{background:var(--danger-bg);border-left-color:var(--danger);color:var(--danger-fg);}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px;}
+.stat{background:#eff6ff;padding:12px 14px;border-radius:8px;border-left:3px solid var(--primary-light);}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.3px;}
+.stat-value{font-size:18px;font-weight:700;color:var(--primary);margin-top:2px;}
+.tabs-row{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px;border-bottom:2px solid var(--border);padding-bottom:0;}
+.tabs{display:flex;gap:4px;overflow-x:auto;flex:1;scrollbar-width:thin;}
+.tabs::-webkit-scrollbar{height:4px;}
+.tabs::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px;}
+.tab{padding:8px 14px;border:none;background:transparent;color:var(--muted);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;font-size:13px;font-family:inherit;width:auto;transition:color .15s,border-color .15s;}
+.tab:hover:not(.active){color:var(--primary-light);}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary-light);}
+.tab .count{opacity:.65;font-weight:500;font-size:12px;margin-left:3px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 10px;text-align:center;}
+th{background:var(--primary);color:#fff;font-weight:600;font-size:12px;}
+td.group-cell{font-weight:700;background:#f8fafc;text-align:left;white-space:nowrap;}
+td.kc{background:#f0f9ff;color:#0369a1;font-weight:600;font-size:12px;}
+td.date{font-family:ui-monospace,Consolas,monospace;font-size:12px;}
+td.date small{color:#94a3b8;font-size:10px;font-weight:400;}
+td.empty{background:#f8fafc;color:#cbd5e1;}
+tr:hover td{background:#f1f5f9;}
+tr:hover td.group-cell{background:#e0e7ff;}
+.scroll-x{overflow-x:auto;max-width:100%;}
+.notice{font-size:12px;color:var(--muted);margin-top:12px;font-style:italic;}
+.print-header{display:none;}
+@media print{
+  body{background:#fff;}
+  header,.form,#warnings,#stats,.stats,.tabs-row,#exportBtn,#previewBtn,#resetBtn,.no-print,.notice{display:none !important;}
+  .app{display:block;padding:0;gap:0;max-width:none;}
+  .preview{box-shadow:none;padding:0;background:#fff;border-radius:0;}
+  .preview > h2{display:none;}
+  .print-header{display:block;margin:0 0 10px;}
+  .print-header h2{color:#000;font-size:16px;text-align:center;margin:0 0 2px;letter-spacing:.5px;}
+  .print-header .by-line{text-align:center;font-size:11px;font-style:italic;margin:0 0 6px;color:#333;}
+  .print-header .meta{text-align:center;font-size:10px;color:#333;margin:0;}
+  .scroll-x{overflow:visible;}
+  table{font-size:9px;}
+  th,td{padding:3px 4px;border:1px solid #000;}
+  th{background:#ddd !important;color:#000 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  td.kc{background:#f3f4f6 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  td.group-cell{background:#f3f4f6 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  @page{size:A4 landscape;margin:.8cm;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📅 Công cụ tính lịch hẹn bệnh nhân</h1>
+  <p>by Bác sĩ Phạm Văn Thái</p>
+</header>
+
+<div class="app">
+  <aside class="form">
+    <h2>Nhập liệu</h2>
+
+    <label for="A">A — Tổng số bệnh nhân</label>
+    <input type="number" id="A" min="1" value="100" autocomplete="off">
+
+    <fieldset>
+      <legend>Tính theo</legend>
+      <label><input type="radio" name="mode" value="B" checked> Nhập B</label>
+      <label><input type="radio" name="mode" value="C"> Nhập C</label>
+    </fieldset>
+
+    <label for="B">B — Số BN mỗi nhóm</label>
+    <input type="number" id="B" min="1" value="10" autocomplete="off">
+
+    <label for="C">C — Số nhóm</label>
+    <input type="number" id="C" min="1" value="10" readonly autocomplete="off">
+
+    <label for="startDate">Ngày bắt đầu</label>
+    <input type="date" id="startDate" autocomplete="off">
+
+    <label for="years">Số năm</label>
+    <input type="number" id="years" min="1" max="20" value="1" autocomplete="off">
+
+    <label for="holidays">Ngày nghỉ nhập tay</label>
+    <textarea id="holidays" rows="7" placeholder="01/01/2026&#10;30/04/2026 - 04/05/2026&#10;02/09/2026" autocomplete="off"></textarea>
+    <div class="hint">
+      Mỗi dòng 1 mục:<br>
+      • 1 ngày: <code>dd/mm/yyyy</code><br>
+      • Khoảng: <code>dd/mm/yyyy - dd/mm/yyyy</code><br>
+      Khoảng ≤ 366 ngày · Trùng tự loại bỏ
+    </div>
+
+    <button type="button" id="previewBtn">🔄 Xem trước</button>
+    <button type="button" id="exportBtn" disabled>📥 Xuất Excel</button>
+    <button type="button" id="resetBtn">↺ Đặt lại</button>
+  </aside>
+
+  <main class="preview">
+    <h2>Kết quả</h2>
+    <div id="warnings"></div>
+    <div id="stats"></div>
+
+    <div class="tabs-row no-print">
+      <div id="tabs" class="tabs"></div>
+      <button type="button" id="printBtn" disabled>🖨 In năm này</button>
+    </div>
+
+    <div class="print-header">
+      <h2>LỊCH HẸN BỆNH NHÂN — <span id="printYearLabel"></span></h2>
+      <p class="by-line">by Bác sĩ Phạm Văn Thái</p>
+      <p class="meta" id="printMeta"></p>
+    </div>
+
+    <div id="previewTable"></div>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+// ================= UTILS =================
+const pad = n => n < 10 ? '0' + n : '' + n;
+const fmtDate = d => pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear();
+const fmtDateISO = d => d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+const dayName = d => ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
+const isWeekend = d => d.getDay() === 0 || d.getDay() === 6;
+const daysBetween = (a, b) => Math.round((b - a) / 86400000);
+
+function parseVN(s) {
+  const m = s.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const dd = +m[1], mm = +m[2], yy = +m[3];
+  const d = new Date(yy, mm - 1, dd);
+  if (d.getDate() !== dd || d.getMonth() !== mm - 1 || d.getFullYear() !== yy) return null;
+  return d;
+}
+
+// ================= HOLIDAYS =================
+function parseHolidaysText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const dates = [], errors = [], seen = new Set();
+  const addDate = d => { const k = fmtDate(d); if (seen.has(k)) return; seen.add(k); dates.push(d); };
+  lines.forEach((line, i) => {
+    const rangeMatch = line.match(/^(\d{1,2}\/\d{1,2}\/\d{4})\s*[-–—]\s*(\d{1,2}\/\d{1,2}\/\d{4})$/);
+    if (rangeMatch) {
+      const from = parseVN(rangeMatch[1]), to = parseVN(rangeMatch[2]);
+      if (!from) { errors.push(`Dòng ${i+1} "${line}": ngày bắt đầu không hợp lệ.`); return; }
+      if (!to)   { errors.push(`Dòng ${i+1} "${line}": ngày kết thúc không hợp lệ.`); return; }
+      if (from > to) { errors.push(`Dòng ${i+1} "${line}": ngày bắt đầu > ngày kết thúc.`); return; }
+      const span = daysBetween(from, to) + 1;
+      if (span > 366) { errors.push(`Dòng ${i+1} "${line}": khoảng quá dài (${span} ngày, tối đa 366).`); return; }
+      for (let k = 0; k < span; k++) addDate(new Date(from.getFullYear(), from.getMonth(), from.getDate() + k));
+      return;
+    }
+    const d = parseVN(line);
+    if (!d) { errors.push(`Dòng ${i+1} "${line}": sai định dạng.`); return; }
+    addDate(d);
+  });
+  return { dates, errors };
+}
+
+// ================= CORE =================
+function buildGroups(A, B) {
+  const C = Math.ceil(A / B);
+  const groups = new Array(C);
+  for (let i = 0; i < C; i++) {
+    const start = i * B + 1;
+    const end = Math.min((i + 1) * B, A);
+    groups[i] = { index: i, start, end, size: end - start + 1, label: `${start}–${end}` };
+  }
+  return groups;
+}
+
+function adjustToWorkingDay(date, holidaySet) {
+  let d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  let guard = 0;
+  while ((isWeekend(d) || holidaySet.has(fmtDate(d))) && guard++ < 3660) d.setDate(d.getDate() + 1);
+  return d;
+}
+
+function generateSchedule(groups, startDate, numYears, manualHolidays) {
+  const holidaySet = new Set(manualHolidays.map(fmtDate));
+  const C = groups.length;
+  const adjustedStart = adjustToWorkingDay(startDate, holidaySet);
+  const firstYear = adjustedStart.getFullYear();
+  const endDate = new Date(firstYear + numYears - 1, 11, 31);
+  const schedule = [];
+  let pointer = 0;
+  let d = new Date(adjustedStart);
+  while (d <= endDate) {
+    if (!isWeekend(d) && !holidaySet.has(fmtDate(d))) {
+      schedule.push({ date: new Date(d), groupIdx: pointer });
+      pointer = (pointer + 1) % C;
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return { schedule, adjustedStart, holidaySet, endDate, firstYear };
+}
+
+function buildYearMatrices(groups, schedule, firstYear, numYears) {
+  const byYear = new Map();
+  for (let y = firstYear; y < firstYear + numYears; y++) byYear.set(y, groups.map(() => []));
+  for (const s of schedule) {
+    const arr = byYear.get(s.date.getFullYear());
+    if (arr) arr[s.groupIdx].push(s.date);
+  }
+  const result = [];
+  for (let y = firstYear; y < firstYear + numYears; y++) {
+    const byGroup = byYear.get(y);
+    const rows = groups.map((g, i) => {
+      const dates = byGroup[i];
+      const kcs = new Array(Math.max(0, dates.length - 1));
+      for (let k = 0; k < kcs.length; k++) kcs[k] = daysBetween(dates[k], dates[k + 1]);
+      return { label: g.label, size: g.size, dates, kcs };
+    });
+    let maxK = 0, count = 0;
+    for (const r of rows) { if (r.dates.length > maxK) maxK = r.dates.length; count += r.dates.length; }
+    result.push({ rows, maxK, year: y, count });
+  }
+  return result;
+}
+
+// ================= STATE =================
+let state = null;
+
+function collectInputs() {
+  const A = parseInt(document.getElementById('A').value, 10);
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  const Braw = parseInt(document.getElementById('B').value, 10);
+  const Craw = parseInt(document.getElementById('C').value, 10);
+  const startStr = document.getElementById('startDate').value;
+  const years = parseInt(document.getElementById('years').value, 10);
+  const holText = document.getElementById('holidays').value;
+  const errors = [];
+  if (!A || A < 1) errors.push('A phải ≥ 1.');
+  if (!years || years < 1) errors.push('Số năm phải ≥ 1.');
+  if (years > 20) errors.push('Số năm tối đa là 20.');
+  if (!startStr) errors.push('Chưa chọn ngày bắt đầu.');
+  let B, C;
+  if (mode === 'B') {
+    B = Braw;
+    if (!B || B < 1) errors.push('B phải ≥ 1.');
+    else if (B > A) errors.push('B không được lớn hơn A.');
+    else C = Math.ceil(A / B);
+  } else {
+    C = Craw;
+    if (!C || C < 1) errors.push('C phải ≥ 1.');
+    else if (C > A) errors.push('C không được lớn hơn A.');
+    else B = Math.ceil(A / C);
+  }
+  let startDate = null;
+  if (startStr) {
+    const parts = startStr.split('-').map(Number);
+    if (parts.length === 3 && parts.every(n => !isNaN(n))) {
+      startDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      if (isNaN(startDate.getTime())) { errors.push('Ngày bắt đầu không hợp lệ.'); startDate = null; }
+    } else errors.push('Ngày bắt đầu không hợp lệ.');
+  }
+  const hol = parseHolidaysText(holText);
+  if (hol.errors.length) errors.push(...hol.errors);
+  return { A, mode, B, C, startDate, years, manualHolidays: hol.dates, errors };
+}
+
+function computeState(input) {
+  if (input.errors.length) return null;
+  const groups = buildGroups(input.A, input.B);
+  const actualC = groups.length;
+  const warnings = [];
+  let cAdjusted = null;
+  if (input.mode === 'C' && actualC !== input.C) {
+    cAdjusted = { requested: input.C, actual: actualC, B: input.B };
+    warnings.push({
+      type: 'warn', title: 'Số nhóm đã được điều chỉnh',
+      text: `Bạn nhập C = ${input.C}. Hệ thống tính B = ⌈${input.A}/${input.C}⌉ = ${input.B}, dẫn đến số nhóm thực tế C' = ⌈${input.A}/${input.B}⌉ = ${actualC}. Đã tự động dùng C' = ${actualC}.`
+    });
+  }
+  const gen = generateSchedule(groups, input.startDate, input.years, input.manualHolidays);
+  if (fmtDate(gen.adjustedStart) !== fmtDate(input.startDate)) {
+    warnings.push({
+      type: 'warn', title: 'Ngày bắt đầu đã được điều chỉnh',
+      text: `Ngày ${fmtDate(input.startDate)} là ngày nghỉ. Lịch bắt đầu từ ${fmtDate(gen.adjustedStart)} (${dayName(gen.adjustedStart)}).`
+    });
+  }
+  const finalGroup = groups[groups.length - 1];
+  if (finalGroup.size < input.B) {
+    warnings.push({
+      type: 'warn', title: 'Nhóm cuối không đủ BN',
+      text: `Nhóm cuối "${finalGroup.label}" chỉ có ${finalGroup.size} BN (thiếu ${input.B - finalGroup.size}).`
+    });
+  }
+  if (gen.schedule.length < actualC) {
+    warnings.push({
+      type: 'error', title: 'Không đủ ngày làm việc',
+      text: `Chỉ có ${gen.schedule.length} ngày làm việc, ít hơn số nhóm (${actualC}).`
+    });
+  }
+  const yearsData = buildYearMatrices(groups, gen.schedule, gen.firstYear, input.years);
+  const appliedHolidays = [];
+  let d = new Date(gen.adjustedStart);
+  while (d <= gen.endDate) {
+    if (isWeekend(d)) appliedHolidays.push({ date: new Date(d), reason: 'Cuối tuần (T7/CN)' });
+    else if (gen.holidaySet.has(fmtDate(d))) appliedHolidays.push({ date: new Date(d), reason: 'Ngày lễ (nhập tay)' });
+    d.setDate(d.getDate() + 1);
+  }
+  let totalWeekend = 0, totalManual = 0;
+  for (const h of appliedHolidays) {
+    if (h.reason.charCodeAt(0) === 67) totalWeekend++; else totalManual++;
+  }
+  return {
+    input, groups, actualC, cAdjusted, gen, warnings, yearsData,
+    appliedHolidays, totalWeekend, totalManual,
+    totalWorkingDays: gen.schedule.length,
+    fullCycles: Math.floor(gen.schedule.length / actualC),
+    yearHtmlCache: new Map()
+  };
+}
+
+// ================= RENDER (web) =================
+function renderWarnings(warnings, extraNotice) {
+  const el = document.getElementById('warnings');
+  let html = warnings.map(w => `<div class="warn ${w.type === 'error' ? 'error' : ''}"><strong>⚠ ${w.title}</strong>${w.text}</div>`).join('');
+  if (extraNotice) html = extraNotice + html;
+  el.innerHTML = html;
+}
+
+function renderStats(st) {
+  document.getElementById('stats').innerHTML = `
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Số nhóm (C)</div><div class="stat-value">${st.actualC}</div></div>
+      <div class="stat"><div class="stat-label">BN / nhóm</div><div class="stat-value">${st.input.B}</div></div>
+      <div class="stat"><div class="stat-label">Tổng ngày làm việc</div><div class="stat-value">${st.totalWorkingDays}</div></div>
+      <div class="stat"><div class="stat-label">Số vòng hoàn chỉnh</div><div class="stat-value">${st.fullCycles}</div></div>
+      <div class="stat"><div class="stat-label">Ngày bắt đầu</div><div class="stat-value">${fmtDate(st.gen.adjustedStart)}</div></div>
+      <div class="stat"><div class="stat-label">Ngày kết thúc</div><div class="stat-value">${fmtDate(st.gen.endDate)}</div></div>
+      <div class="stat"><div class="stat-label">T7/CN bỏ qua</div><div class="stat-value">${st.totalWeekend}</div></div>
+      <div class="stat"><div class="stat-label">Lễ nhập tay bỏ qua</div><div class="stat-value">${st.totalManual}</div></div>
+    </div>`;
+}
+
+function renderTabs(yearsData) {
+  const el = document.getElementById('tabs');
+  el.innerHTML = yearsData.map((y, i) => `<button type="button" class="tab ${i === 0 ? 'active' : ''}" data-year="${y.year}">Năm ${y.year}<span class="count">(${y.count})</span></button>`).join('');
+  el.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    el.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    const year = +t.dataset.year;
+    renderYearTable(yearsData, year);
+    updatePrintHeader(year);
+  }));
+}
+
+function renderYearTable(yearsData, year) {
+  const data = yearsData.find(y => y.year === year);
+  if (!data) return;
+  const el = document.getElementById('previewTable');
+  if (state && state.yearHtmlCache.has(year)) { el.innerHTML = state.yearHtmlCache.get(year); return; }
+  if (data.maxK === 0) {
+    const html = '<p style="text-align:center;color:#64748b;padding:20px;">Không có lịch hẹn trong năm này.</p>';
+    el.innerHTML = html; if (state) state.yearHtmlCache.set(year, html); return;
+  }
+  const maxCols = Math.min(data.maxK, 10);
+  let head = '<tr><th>Nhóm</th>';
+  for (let k = 0; k < maxCols; k++) {
+    head += `<th>Lần ${k+1}</th>`;
+    if (k < maxCols - 1) head += `<th>KC (${k+1}→${k+2})</th>`;
+  }
+  if (data.maxK > 10) head += `<th>… (${data.maxK - 10} cột nữa)</th>`;
+  head += '</tr>';
+  let body = '';
+  for (const row of data.rows) {
+    let tr = `<tr><td class="group-cell">${row.label}</td>`;
+    for (let k = 0; k < maxCols; k++) {
+      tr += (k < row.dates.length) ? `<td class="date">${fmtDate(row.dates[k])}<br><small>${dayName(row.dates[k])}</small></td>` : '<td class="empty">—</td>';
+      if (k < maxCols - 1) tr += (k < row.kcs.length) ? `<td class="kc">${row.kcs[k]}</td>` : '<td class="empty">—</td>';
+    }
+    if (data.maxK > 10) tr += '<td class="empty">…</td>';
+    tr += '</tr>';
+    body += tr;
+  }
+  const html = `<div class="scroll-x"><table>${head}${body}</table></div>
+    <p class="notice">Hiển thị tối đa 10 cột "Lần". File Excel chứa đầy đủ ${data.maxK} cột.</p>`;
+  el.innerHTML = html;
+  if (state) state.yearHtmlCache.set(year, html);
+}
+
+function updatePrintHeader(year) {
+  document.getElementById('printYearLabel').textContent = `NĂM ${year}`;
+  if (state) {
+    document.getElementById('printMeta').textContent =
+      `A = ${state.input.A} · B = ${state.input.B} · C = ${state.actualC} · Ngày bắt đầu: ${fmtDate(state.gen.adjustedStart)} · Phạm vi: ${fmtDate(state.gen.adjustedStart)} – ${fmtDate(state.gen.endDate)}`;
+  }
+}
+
+function printCurrentYear() {
+  if (!state) return;
+  const activeTab = document.querySelector('.tab.active');
+  const year = activeTab ? +activeTab.dataset.year : state.yearsData[0].year;
+  updatePrintHeader(year);
+  window.print();
+}
+
+// ================= EXCEL STYLES =================
+const BORDER = { style: 'thin', color: { rgb: 'D1D5DB' } };
+const BORDER_ALL = { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER };
+const BORDER_SECTION = { style: 'thin', color: { rgb: '1E40AF' } };
+const BORDER_SECTION_ALL = { top: BORDER_SECTION, bottom: BORDER_SECTION, left: BORDER_SECTION, right: BORDER_SECTION };
+
+const STYLES = {
+  title: {
+    font: { bold: true, sz: 15, color: { rgb: '1E40AF' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  },
+  subtitle: {
+    font: { italic: true, sz: 10, color: { rgb: '64748B' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  },
+  sectionHeader: {
+    font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' } },
+    fill: { patternType: 'solid', fgColor: { rgb: '1E40AF' } },
+    alignment: { horizontal: 'left', vertical: 'center' },
+    border: BORDER_SECTION_ALL
+  },
+  label: {
+    font: { bold: true, sz: 10, color: { rgb: '334155' } },
+    alignment: { horizontal: 'left', vertical: 'center' },
+    fill: { patternType: 'solid', fgColor: { rgb: 'F8FAFC' } },
+    border: BORDER_ALL
+  },
+  value: {
+    font: { sz: 10 },
+    alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+    border: BORDER_ALL
+  },
+  infoMerged: {
+    font: { sz: 10, color: { rgb: '334155' } },
+    alignment: { horizontal: 'left', vertical: 'center' }
+  },
+  tableHeader: {
+    font: { bold: true, sz: 10, color: { rgb: 'FFFFFF' } },
+    fill: { patternType: 'solid', fgColor: { rgb: '3B82F6' } },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border: BORDER_ALL
+  },
+  data: {
+    font: { sz: 10 },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: BORDER_ALL
+  },
+  dataLeft: {
+    font: { bold: true, sz: 10 },
+    alignment: { horizontal: 'left', vertical: 'center' },
+    fill: { patternType: 'solid', fgColor: { rgb: 'F8FAFC' } },
+    border: BORDER_ALL
+  },
+  dataKC: {
+    font: { sz: 10, color: { rgb: '0369A1' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    fill: { patternType: 'solid', fgColor: { rgb: 'F0F9FF' } },
+    border: BORDER_ALL
+  }
+};
+
+function ensureCell(ws, r, c) {
+  const addr = XLSX.utils.encode_cell({ r, c });
+  if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+  return addr;
+}
+
+function styleRange(ws, r1, c1, r2, c2, style) {
+  for (let r = r1; r <= r2; r++) {
+    for (let c = c1; c <= c2; c++) {
+      ws[ensureCell(ws, r, c)].s = style;
+    }
+  }
+}
+
+// ================= BUILD YEAR SHEET =================
+function buildYearSheet(st, yd) {
+  const colsCount = 1 + yd.maxK + Math.max(0, yd.maxK - 1);
+  const lastCol = colsCount - 1;
+
+  const rows = [];
+  const push = (type, data) => rows.push({ type, data });
+
+  // Pad a single-string row to full width for merging
+  const pad = (text) => [text, ...Array(colsCount - 1).fill('')];
+
+  push('title', pad(`LỊCH HẸN BỆNH NHÂN — NĂM ${yd.year}`));
+  push('subtitle', pad('by Bác sĩ Phạm Văn Thái'));
+  push('empty', []);
+  push('info', [`A (tổng BN) = ${st.input.A}     ·     B (BN/nhóm) = ${st.input.B}     ·     C (số nhóm) = ${st.actualC}`]);
+  push('info', [`Ngày bắt đầu hiệu lực: ${fmtDate(st.gen.adjustedStart)} (${dayName(st.gen.adjustedStart)})     ·     Số năm: ${st.input.years}`]);
+  push('info', [`Số lần/nhóm tối đa trong năm: ${yd.maxK}     ·     Tổng ngày hẹn trong năm: ${yd.count}`]);
+  push('empty', []);
+
+  // Header
+  const header = ['Nhóm'];
+  for (let k = 0; k < yd.maxK; k++) {
+    header.push(`Lần ${k+1}`);
+    if (k < yd.maxK - 1) header.push(`KC (${k+1}→${k+2})`);
+  }
+  push('header', header);
+
+  // Data
+  for (const rrow of yd.rows) {
+    const cells = [rrow.label];
+    for (let k = 0; k < yd.maxK; k++) {
+      cells.push(k < rrow.dates.length ? fmtDate(rrow.dates[k]) : '');
+      if (k < yd.maxK - 1) cells.push(k < rrow.kcs.length ? rrow.kcs[k] : '');
+    }
+    push('datarow', cells);
+  }
+
+  const aoa = rows.map(r => r.data);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  const headerRowIdx = rows.findIndex(r => r.type === 'header');
+
+  // Apply styles
+  rows.forEach((row, ri) => {
+    if (row.type === 'empty') return;
+    if (row.type === 'title') { styleRange(ws, ri, 0, ri, lastCol, STYLES.title); return; }
+    if (row.type === 'subtitle') { styleRange(ws, ri, 0, ri, lastCol, STYLES.subtitle); return; }
+    if (row.type === 'info') {
+      // Info rows: only cell A gets style; others absent so text overflows
+      const addr = XLSX.utils.encode_cell({ r: ri, c: 0 });
+      if (ws[addr]) ws[addr].s = STYLES.infoMerged;
+      return;
+    }
+    if (row.type === 'header') {
+      row.data.forEach((v, ci) => {
+        const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
+        if (ws[addr]) ws[addr].s = STYLES.tableHeader;
+      });
+      return;
+    }
+    if (row.type === 'datarow') {
+      row.data.forEach((v, ci) => {
+        if (v === '' || v == null) return;
+        const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
+        if (!ws[addr]) return;
+        if (ci === 0) ws[addr].s = STYLES.dataLeft;
+        else if (ci % 2 === 1) ws[addr].s = STYLES.data;
+        else ws[addr].s = STYLES.dataKC;
+      });
+      return;
+    }
+  });
+
+  // Merges
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } }
+  ];
+
+  // Column widths
+  const cols = [{ wch: 14 }];
+  for (let k = 0; k < yd.maxK; k++) {
+    cols.push({ wch: 13 });
+    if (k < yd.maxK - 1) cols.push({ wch: 9 });
+  }
+  ws['!cols'] = cols;
+
+  // Row heights
+  const rowHeights = [];
+  rowHeights[0] = { hpt: 26 };
+  rowHeights[1] = { hpt: 18 };
+  if (headerRowIdx >= 0) rowHeights[headerRowIdx] = { hpt: 26 };
+  ws['!rows'] = rowHeights;
+
+  return ws;
+}
+
+// ================= BUILD REPORT SHEET =================
+function buildReportSheet(st) {
+  const rows = [];
+  const push = (type, data) => rows.push({ type, data });
+  const pad4 = (text) => [text, '', '', ''];
+
+  push('title', pad4('BÁO CÁO TỔNG HỢP LỊCH HẸN BỆNH NHÂN'));
+  push('subtitle', pad4('by Bác sĩ Phạm Văn Thái'));
+  push('empty', []);
+
+  push('section', pad4('THÔNG TIN CHUNG'));
+  push('kv', ['Tổng số bệnh nhân (A)', st.input.A]);
+  push('kv', ['Số BN mỗi nhóm (B)', st.input.B]);
+  push('kv', ['Số nhóm thực tế (C)', st.actualC]);
+  if (st.cAdjusted) {
+    push('kv', ['C yêu cầu', st.cAdjusted.requested]);
+    push('kv', ['C thực tế được dùng', st.cAdjusted.actual]);
+    push('kv-long', ['Lý do điều chỉnh', `Với A=${st.input.A}, C=${st.cAdjusted.requested} → B=⌈A/C⌉=${st.cAdjusted.B} → C'=⌈A/B⌉=${st.cAdjusted.actual} ≠ ${st.cAdjusted.requested}. Hệ thống tự động dùng C'=${st.cAdjusted.actual}.`]);
+  }
+  push('kv', ['Nhóm đầu tiên', st.groups[0].label]);
+  push('kv', ['Nhóm cuối cùng', st.groups[st.groups.length - 1].label + ` (${st.groups[st.groups.length - 1].size} BN)`]);
+  push('kv', ['Ngày bắt đầu yêu cầu', fmtDate(st.input.startDate)]);
+  push('kv', ['Ngày bắt đầu hiệu lực', fmtDate(st.gen.adjustedStart) + ` (${dayName(st.gen.adjustedStart)})`]);
+  push('kv', ['Số năm', st.input.years]);
+  push('kv', ['Phạm vi', `${fmtDate(st.gen.adjustedStart)} → ${fmtDate(st.gen.endDate)}`]);
+  push('empty', []);
+
+  push('section', pad4('THỐNG KÊ'));
+  push('kv', ['Tổng ngày làm việc đã xếp', st.totalWorkingDays]);
+  push('kv', ['Số vòng hoàn chỉnh', st.fullCycles]);
+  push('kv', ['Tổng ngày T7/CN bỏ qua', st.totalWeekend]);
+  push('kv', ['Tổng ngày lễ nhập tay bỏ qua', st.totalManual]);
+  push('empty', []);
+
+  push('section', pad4('CẢNH BÁO'));
+  if (!st.warnings.length) {
+    push('info-plain', pad4('(Không có cảnh báo)'));
+  } else {
+    st.warnings.forEach(w => push('kv-long', [w.title, w.text]));
+  }
+  push('empty', []);
+
+  push('section', pad4('NGÀY NGHỈ ĐÃ ÁP DỤNG'));
+  push('header4', ['STT', 'Ngày', 'Thứ', 'Lý do']);
+  st.appliedHolidays.forEach((h, i) => push('row4', [i + 1, fmtDate(h.date), dayName(h.date), h.reason]));
+  push('empty', []);
+
+  push('section', pad4('TỔNG HỢP NGÀY NGHỈ THEO NĂM'));
+  push('header4', ['Năm', 'T7/CN', 'Lễ nhập tay', 'Tổng']);
+  const byYear = {};
+  for (const h of st.appliedHolidays) {
+    const y = h.date.getFullYear();
+    if (!byYear[y]) byYear[y] = { weekend: 0, manual: 0 };
+    if (h.reason.charCodeAt(0) === 67) byYear[y].weekend++; else byYear[y].manual++;
+  }
+  Object.keys(byYear).sort().forEach(y => {
+    const b = byYear[y];
+    push('row4', [+y, b.weekend, b.manual, b.weekend + b.manual]);
+  });
+
+  const aoa = rows.map(r => r.data);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // Apply styles
+  rows.forEach((row, ri) => {
+    if (row.type === 'empty') return;
+    switch (row.type) {
+      case 'title':
+      case 'subtitle':
+      case 'section':
+      case 'info-plain':
+        styleRange(ws, ri, 0, ri, 3, STYLES[row.type === 'info-plain' ? 'infoMerged' : row.type]);
+        break;
+      case 'kv':
+        styleRange(ws, ri, 0, ri, 0, STYLES.label);
+        styleRange(ws, ri, 1, ri, 1, STYLES.value);
+        break;
+      case 'kv-long':
+        styleRange(ws, ri, 0, ri, 0, STYLES.label);
+        styleRange(ws, ri, 1, ri, 3, STYLES.value);
+        break;
+      case 'header4':
+        styleRange(ws, ri, 0, ri, 3, STYLES.tableHeader);
+        break;
+      case 'row4':
+        styleRange(ws, ri, 0, ri, 3, STYLES.data);
+        break;
+    }
+  });
+
+  // Merges
+  const merges = [];
+  rows.forEach((row, ri) => {
+    if (row.type === 'title' || row.type === 'subtitle' || row.type === 'section' || row.type === 'info-plain') {
+      merges.push({ s: { r: ri, c: 0 }, e: { r: ri, c: 3 } });
+    }
+    if (row.type === 'kv-long') {
+      merges.push({ s: { r: ri, c: 1 }, e: { r: ri, c: 3 } });
+    }
+  });
+  ws['!merges'] = merges;
+
+  // Column widths
+  ws['!cols'] = [{ wch: 32 }, { wch: 28 }, { wch: 12 }, { wch: 42 }];
+
+  // Row heights
+  const rowHeights = [];
+  rowHeights[0] = { hpt: 28 };
+  rowHeights[1] = { hpt: 18 };
+  rows.forEach((row, ri) => {
+    if (row.type === 'section') rowHeights[ri] = { hpt: 22 };
+    if (row.type === 'header4') rowHeights[ri] = { hpt: 22 };
+    if (row.type === 'kv-long') {
+      const textLen = String(row.data[1] || '').length;
+      const lines = Math.max(1, Math.ceil(textLen / 70));
+      rowHeights[ri] = { hpt: lines * 16 + 6 };
+    }
+  });
+  ws['!rows'] = rowHeights;
+
+  return ws;
+}
+
+// ================= EXCEL DOWNLOAD =================
+function downloadExcel(wb, filename) {
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.style.display = 'none';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function exportExcel(st) {
+  const wb = XLSX.utils.book_new();
+
+  // Thứ tự: các năm trước, Báo cáo CUỐI CÙNG
+  for (const yd of st.yearsData) {
+    const ws = buildYearSheet(st, yd);
+    XLSX.utils.book_append_sheet(wb, ws, `Năm ${yd.year}`);
+  }
+  const wsReport = buildReportSheet(st);
+  XLSX.utils.book_append_sheet(wb, wsReport, 'Báo cáo');
+
+  const fname = `LichHen_${st.input.A}BN_${fmtDateISO(st.gen.adjustedStart).replace(/-/g, '')}.xlsx`;
+  downloadExcel(wb, fname);
+}
+
+// ================= EVENTS =================
+function updateCFromB() {
+  const A = parseInt(document.getElementById('A').value, 10) || 0;
+  const B = parseInt(document.getElementById('B').value, 10) || 0;
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  if (mode === 'B' && A > 0 && B > 0) document.getElementById('C').value = Math.ceil(A / B);
+}
+function updateBFromC() {
+  const A = parseInt(document.getElementById('A').value, 10) || 0;
+  const C = parseInt(document.getElementById('C').value, 10) || 0;
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  if (mode === 'C' && A > 0 && C > 0) document.getElementById('B').value = Math.ceil(A / C);
+}
+function handleModeChange() {
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  const BEl = document.getElementById('B'), CEl = document.getElementById('C');
+  if (mode === 'B') { BEl.readOnly = false; CEl.readOnly = true; updateCFromB(); }
+  else { BEl.readOnly = true; CEl.readOnly = false; updateBFromC(); }
+}
+
+function markDirty() {
+  if (!state) return;
+  document.getElementById('exportBtn').disabled = true;
+  document.getElementById('printBtn').disabled = true;
+  document.getElementById('previewBtn').classList.add('dirty');
+  const w = document.getElementById('warnings');
+  if (!w.querySelector('.dirty-notice')) {
+    w.insertAdjacentHTML('afterbegin', '<div class="warn dirty-notice"><strong>ℹ Dữ liệu đã thay đổi</strong>Bấm "Xem trước" để cập nhật kết quả trước khi xuất/in.</div>');
+  }
+}
+
+function doPreview() {
+  const input = collectInputs();
+  document.getElementById('previewBtn').classList.remove('dirty');
+  if (input.errors.length) {
+    renderWarnings([{ type: 'error', title: 'Dữ liệu không hợp lệ', text: input.errors.join(' · ') }]);
+    document.getElementById('exportBtn').disabled = true;
+    document.getElementById('printBtn').disabled = true;
+    state = null;
+    return;
+  }
+  const st = computeState(input);
+  if (!st) return;
+  state = st;
+  renderWarnings(st.warnings);
+  renderStats(st);
+  renderTabs(st.yearsData);
+  renderYearTable(st.yearsData, st.yearsData[0].year);
+  updatePrintHeader(st.yearsData[0].year);
+  document.getElementById('exportBtn').disabled = false;
+  document.getElementById('printBtn').disabled = false;
+}
+
+function doExport() {
+  if (!state) return;
+  const btn = document.getElementById('exportBtn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Đang xuất...';
+  requestAnimationFrame(() => setTimeout(() => {
+    try { exportExcel(state); }
+    catch (e) { console.error(e); alert('Xuất file thất bại: ' + e.message); }
+    finally { btn.disabled = false; btn.innerHTML = orig; }
+  }, 10));
+}
+
+function doReset() {
+  document.getElementById('A').value = 100;
+  document.querySelector('input[name="mode"][value="B"]').checked = true;
+  document.getElementById('B').value = 10;
+  document.getElementById('C').value = 10;
+  document.getElementById('startDate').value = fmtDateISO(new Date());
+  document.getElementById('years').value = 1;
+  document.getElementById('holidays').value = '';
+  handleModeChange();
+  state = null;
+  document.getElementById('warnings').innerHTML = '';
+  document.getElementById('stats').innerHTML = '';
+  document.getElementById('tabs').innerHTML = '';
+  document.getElementById('previewTable').innerHTML = '';
+  document.getElementById('exportBtn').disabled = true;
+  document.getElementById('printBtn').disabled = true;
+  document.getElementById('previewBtn').classList.remove('dirty');
+}
+
+function init() {
+  document.getElementById('startDate').value = fmtDateISO(new Date());
+  document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', handleModeChange));
+  document.getElementById('A').addEventListener('input', () => {
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+    mode === 'B' ? updateCFromB() : updateBFromC();
+  });
+  document.getElementById('B').addEventListener('input', updateCFromB);
+  document.getElementById('C').addEventListener('input', updateBFromC);
+  ['A', 'B', 'C', 'startDate', 'years', 'holidays'].forEach(id => {
+    document.getElementById(id).addEventListener('input', markDirty);
+    document.getElementById(id).addEventListener('change', markDirty);
+  });
+  document.getElementById('previewBtn').addEventListener('click', doPreview);
+  document.getElementById('exportBtn').addEventListener('click', doExport);
+  document.getElementById('printBtn').addEventListener('click', printCurrentYear);
+  document.getElementById('resetBtn').addEventListener('click', doReset);
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); doPreview(); }
+  });
+  handleModeChange();
+}
+init();
+</script>
+</body>
+</html>
