@@ -37,6 +37,8 @@
       --md-sys-color-on-warning-container: #2c1600;
 
       --md-sys-color-error: #b3261e;
+      --md-sys-color-error-container: #f9dedc;
+      --md-sys-color-on-error-container: #410e0b;
 
       /* Tonal Surfaces (No heavy borders — elevation via subtle tonal steps) */
       --md-sys-color-background: #f8fafd;
@@ -91,6 +93,8 @@
       --md-sys-color-on-warning-container: #ffdf9e;
 
       --md-sys-color-error: #f2b8b5;
+      --md-sys-color-error-container: #8c1d18;
+      --md-sys-color-on-error-container: #f9dedc;
 
       --md-sys-color-background: #000000;
       --md-sys-color-surface: #000000;
@@ -492,6 +496,19 @@
       pointer-events: none;
     }
 
+    .m3-field-hint {
+      margin-top: 5px;
+      padding: 0 4px;
+      font-size: 0.75rem;
+      color: var(--md-sys-color-on-surface-variant);
+      line-height: 1.35;
+    }
+
+    .m3-field-hint.error {
+      color: var(--md-sys-color-error);
+      font-weight: 500;
+    }
+
     textarea.m3-input {
       height: auto;
       min-height: 84px;
@@ -515,7 +532,7 @@
       background-color: var(--md-sys-color-surface-container);
       border-radius: var(--shape-sm);
       gap: 8px;
-      grid-template-columns: 1fr 1fr auto;
+      grid-template-columns: 1fr 1fr;
       align-items: center;
     }
 
@@ -530,6 +547,13 @@
       background-color: var(--md-sys-color-surface-container-lowest);
       border: 1px solid var(--md-sys-color-outline-variant);
       border-radius: var(--shape-xs);
+    }
+
+    .range-drawer-note-row {
+      grid-column: span 2;
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
 
     /* Parsed Holiday M3 Input Chips */
@@ -712,9 +736,9 @@
     .m3-search-pill {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       height: 36px;
-      padding: 0 14px;
+      padding: 0 10px 0 14px;
       border-radius: var(--shape-full);
       background-color: var(--md-sys-color-surface-container-low);
       border: 1px solid transparent;
@@ -734,7 +758,7 @@
     }
 
     .m3-search-pill input {
-      width: 175px;
+      width: 170px;
       border: none;
       background: transparent;
       color: var(--md-sys-color-on-surface);
@@ -745,6 +769,31 @@
 
     .m3-search-pill input::placeholder {
       color: var(--md-sys-color-outline);
+    }
+
+    .search-clear-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .search-clear-btn.visible {
+      display: inline-flex;
+    }
+
+    .search-clear-btn:hover {
+      background-color: var(--state-neutral-hover);
+      color: var(--md-sys-color-on-surface);
     }
 
     /* Sub-header Info Strip */
@@ -761,6 +810,13 @@
       gap: 8px;
     }
 
+    .subbar-left-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .lookup-badge {
       display: inline-flex;
       align-items: center;
@@ -773,6 +829,11 @@
       font-size: 0.78rem;
     }
 
+    .lookup-badge.warn {
+      background-color: var(--md-sys-color-error-container);
+      color: var(--md-sys-color-on-error-container);
+    }
+
     /* ==========================================================================
        GOOGLE DATA TABLE (STICKY FROZEN COLUMN WITH SCROLL SHADOW)
        ========================================================================== */
@@ -781,6 +842,7 @@
       overflow-x: auto;
       max-height: 620px;
       overflow-y: auto;
+      position: relative;
     }
 
     table.m3-table {
@@ -1028,16 +1090,8 @@
         font-size: 1.25rem;
       }
 
-      .range-drawer.open {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .range-drawer.open button {
-        grid-column: span 2;
-      }
-
       .m3-search-pill input {
-        width: 130px;
+        width: 125px;
       }
 
       .m3-snackbar {
@@ -1068,8 +1122,13 @@
       .scorecard-grid,
       .sheet-toolbar,
       .sheet-subbar,
-      .m3-snackbar {
+      .m3-snackbar,
+      #viewHost {
         display: none !important;
+      }
+
+      #printHost {
+        display: block !important;
       }
 
       .workspace {
@@ -1081,6 +1140,7 @@
       .workspace-sheet {
         border: none !important;
         box-shadow: none !important;
+        overflow: visible !important;
       }
 
       .print-header {
@@ -1105,14 +1165,14 @@
       }
 
       table.m3-table {
-        font-size: 10px;
+        font-size: 9.5px;
       }
 
       table.m3-table th,
       table.m3-table td {
         position: static !important;
         border: 1px solid #888888 !important;
-        padding: 4px 6px !important;
+        padding: 4px 5px !important;
         background: #ffffff !important;
         color: #000000 !important;
         box-shadow: none !important;
@@ -1192,7 +1252,7 @@
           <label class="m3-label" for="inputA">A - Tổng số bệnh nhân đang quản lý hay cần xếp lịch</label>
         </div>
         <div class="m3-input-box">
-          <input type="number" id="inputA" class="m3-input" min="1" max="100000" value="1300" />
+          <input type="number" id="inputA" class="m3-input" min="1" max="100000" step="1" inputmode="numeric" value="1300" />
           <span class="m3-unit">BN</span>
         </div>
       </div>
@@ -1203,7 +1263,7 @@
           <label class="m3-label" for="inputB">B - Mỗi ngày sẽ có bao nhiêu bệnh nhân?</label>
         </div>
         <div class="m3-input-box">
-          <input type="number" id="inputB" class="m3-input" min="1" max="100000" value="50" />
+          <input type="number" id="inputB" class="m3-input" min="1" max="100000" step="1" inputmode="numeric" value="50" />
           <span class="m3-unit">BN/ngày</span>
         </div>
       </div>
@@ -1214,9 +1274,10 @@
           <label class="m3-label" for="inputC">C - Chia số bệnh nhân thành bao nhiêu nhóm?</label>
         </div>
         <div class="m3-input-box">
-          <input type="number" id="inputC" class="m3-input" min="1" max="100000" value="26" />
+          <input type="number" id="inputC" class="m3-input" min="1" max="100000" step="1" inputmode="numeric" value="26" />
           <span class="m3-unit">nhóm</span>
         </div>
+        <div class="m3-field-hint" id="groupRatioHint"></div>
       </div>
 
       <div class="m3-divider"></div>
@@ -1252,19 +1313,23 @@
         </div>
 
         <div class="range-drawer" id="rangeDrawer">
-          <input type="date" id="pickStart" class="m3-input" title="Từ ngày" />
-          <input type="date" id="pickEnd" class="m3-input" title="Đến ngày" />
-          <button type="button" class="m3-btn m3-btn-filled" style="height:36px;padding:0 14px;font-size:0.8rem;" id="addRangeBtn">Thêm</button>
+          <input type="date" id="pickStart" class="m3-input" title="Từ ngày" aria-label="Từ ngày" />
+          <input type="date" id="pickEnd" class="m3-input" title="Đến ngày" aria-label="Đến ngày" />
+          <div class="range-drawer-note-row">
+            <input type="text" id="pickNote" class="m3-input" placeholder="Ghi chú ngày nghỉ (không bắt buộc)" aria-label="Ghi chú ngày nghỉ" />
+            <button type="button" class="m3-btn m3-btn-filled" style="height:36px;padding:0 14px;font-size:0.8rem;" id="addRangeBtn">Thêm</button>
+          </div>
         </div>
 
         <div class="m3-input-box">
           <textarea
             id="inputHolidays"
             class="m3-input"
-            placeholder="Ví dụ:&#10;30/04/2027 - 01/05/2027&#10;02/09/2027"
+            placeholder="Ví dụ (mỗi dòng 1 mốc):&#10;30/04/2027 - 01/05/2027 (Nghỉ lễ)&#10;02/09/2027"
           ></textarea>
         </div>
 
+        <div class="m3-field-hint error" id="holidayErrorHint" style="display:none;"></div>
         <div class="chip-cloud" id="holidayChips" aria-label="Danh sách ngày nghỉ đã nhận diện"></div>
       </div>
     </aside>
@@ -1323,12 +1388,13 @@
           </nav>
 
           <div class="toolbar-right">
-            <div class="m3-search-pill" id="searchBoxWrap" title="Nhập số thứ tự bệnh nhân (ví dụ: 425) để tìm nhóm">
+            <div class="m3-search-pill" id="searchBoxWrap" title="Nhập số thứ tự bệnh nhân (ví dụ: 425) hoặc số nhóm (ví dụ: Nhóm 3)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <input type="text" id="lookupInput" placeholder="Tra cứu STT bệnh nhân..." autocomplete="off" />
+              <input type="text" id="lookupInput" placeholder="Tra cứu STT BN / Nhóm..." autocomplete="off" />
+              <button type="button" class="search-clear-btn" id="clearLookupBtn" aria-label="Xóa tìm kiếm" title="Xóa">&times;</button>
             </div>
 
             <button type="button" class="m3-btn m3-btn-tonal" id="printBtn">
@@ -1343,7 +1409,10 @@
         </div>
 
         <div class="sheet-subbar">
-          <span id="captionLeft"></span>
+          <div class="subbar-left-group">
+            <span id="captionLeft"></span>
+            <button type="button" class="m3-text-btn" id="toggleVisitsColsBtn" style="display:none;height:26px;font-size:0.78rem;"></button>
+          </div>
           <span id="captionRight"></span>
         </div>
 
@@ -1359,7 +1428,7 @@
     /* ==========================================================================
        1. EXECUTIVE-GRADE PURE-JS OOXML (.XLSX) GENERATOR
        Single unified sheet with KPI scorecards, two-tier grouped headers,
-       live formulas, AutoFilter, frozen panes, and A4 landscape page setup.
+       live formulas with fullCalcOnLoad, AutoFilter, frozen panes, and A4 setup.
        ========================================================================== */
     const PureXlsxBuilder = (() => {
       const crcTable = new Uint32Array(256);
@@ -1436,7 +1505,7 @@
           wb += `\n    <sheet name="${escXml(safeSheetName(s.name))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`;
           wbRels += `\n  <Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`;
         });
-        wb += `\n  </sheets>\n</workbook>`;
+        wb += `\n  </sheets>\n  <calcPr calcId="171027" fullCalcOnLoad="1"/>\n</workbook>`;
         wbRels += `\n  <Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>\n</Relationships>`;
 
         add("xl/workbook.xml", wb);
@@ -1528,7 +1597,7 @@
     <xf numFmtId="164" fontId="11" fillId="10" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="0" fontId="10" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="165" fontId="4" fillId="3" borderId="3" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
-    <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="center" wrapText="1"/></xf>
     <xf numFmtId="165" fontId="0" fillId="8" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
   </cellXfs>
 </styleSheet>`;
@@ -1720,8 +1789,19 @@
       holidaysText: "",
       activeTab: "schedule",
       lookupQuery: "",
+      showAllVisits: false,
       computed: null
     };
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
 
     function toIso(d) {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -1760,12 +1840,37 @@
       return null;
     }
 
+    // Split holiday tokens by newline, or by semicolon/comma OUTSIDE parentheses
+    function splitHolidayTokens(raw) {
+      const tokens = [];
+      let cur = "";
+      let depth = 0;
+      for (let i = 0; i < raw.length; i++) {
+        const ch = raw[i];
+        if (ch === "(") {
+          depth++;
+          cur += ch;
+        } else if (ch === ")" && depth > 0) {
+          depth--;
+          cur += ch;
+        } else if (ch === "\n" || ch === "\r" || (depth === 0 && (ch === ";" || ch === ","))) {
+          tokens.push(cur);
+          cur = "";
+        } else {
+          cur += ch;
+        }
+      }
+      tokens.push(cur);
+      return tokens;
+    }
+
     function parseHolidays(raw) {
       const map = new Map();
       const chips = [];
-      if (!raw || !raw.trim()) return { map, chips };
+      const invalidTokens = [];
+      if (!raw || !raw.trim()) return { map, chips, invalidTokens };
 
-      const tokens = raw.split(/[\n\r;,]+/);
+      const tokens = splitHolidayTokens(raw);
       tokens.forEach((rawTok, idx) => {
         let token = rawTok.trim();
         if (!token) return;
@@ -1782,16 +1887,19 @@
           token = token.slice(0, colonIdx).trim();
         }
 
-        const range = token.match(/^(.+?)\s*(?:\-|–|—|đến|tới|->|\.\.)\s*(.+)$/i);
+        // Match explicit date-range syntax so hyphenated dates like 30-04-2027 - 01-05-2027 parse cleanly
+        const range = token.match(/^(\d{1,4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,4})\s*(?:\-|–|—|đến|tới|->|\.\.)\s*(\d{1,4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,4})$/i);
         if (range) {
           const d1 = parseFlexDate(range[1]);
           const d2 = parseFlexDate(range[2]);
           if (d1 && d2) {
             const start = d1 <= d2 ? d1 : d2;
             const end = d1 <= d2 ? d2 : d1;
+            const resolvedNote = note || "Nghỉ theo khoảng ngày";
             chips.push({
               tokenIndex: idx,
-              label: start.getTime() === end.getTime() ? toVNDate(start) : `${toVNDate(start)} – ${toVNDate(end)}`
+              label: start.getTime() === end.getTime() ? toVNDate(start) : `${toVNDate(start)} – ${toVNDate(end)}`,
+              note: resolvedNote
             });
             const cur = new Date(start.getFullYear(), start.getMonth(), start.getDate());
             let guard = 0;
@@ -1801,7 +1909,7 @@
                 map.set(iso, {
                   dateObj: new Date(cur.getFullYear(), cur.getMonth(), cur.getDate()),
                   isoKey: iso,
-                  note: note || "Nghỉ theo khoảng ngày"
+                  note: resolvedNote
                 });
               }
               cur.setDate(cur.getDate() + 1);
@@ -1814,23 +1922,32 @@
         const single = parseFlexDate(token);
         if (single) {
           const iso = toIso(single);
-          chips.push({ tokenIndex: idx, label: toVNDate(single) });
+          const resolvedNote = note || "Ngày nghỉ nhập tay";
+          chips.push({
+            tokenIndex: idx,
+            label: toVNDate(single),
+            note: resolvedNote
+          });
           if (!map.has(iso)) {
             map.set(iso, {
               dateObj: single,
               isoKey: iso,
-              note: note || "Ngày nghỉ nhập tay"
+              note: resolvedNote
             });
           }
+          return;
         }
+
+        invalidTokens.push(rawTok.trim());
       });
 
       const sortedMap = new Map(Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])));
-      return { map: sortedMap, chips };
+      return { map: sortedMap, chips, invalidTokens };
     }
 
     function showSnackbar(msg) {
       const el = document.getElementById("snackbar");
+      if (!el) return;
       el.textContent = msg;
       el.classList.add("show");
       clearTimeout(el._t);
@@ -1858,14 +1975,17 @@
        4. CORE SCHEDULING ALGORITHM (CONTINUOUS ACROSS START_DATE .. END_DATE)
        ========================================================================== */
     function computeSchedule() {
-      const A = Math.max(1, Math.floor(Number(state.A) || 1));
-      let B = Math.max(1, Math.min(A, Math.floor(Number(state.B) || 1)));
-      let C = Math.max(1, Math.min(A, Math.floor(Number(state.C) || 1)));
+      const A = Math.max(1, Math.min(100000, Math.floor(Number(state.A) || 1)));
+      let B;
+      let C;
 
-      if (state.driver === "B") {
+      if (state.driver === "C") {
+        const rawC = Math.max(1, Math.min(A, Math.floor(Number(state.C) || 1)));
+        B = Math.max(1, Math.ceil(A / rawC));
         C = Math.max(1, Math.floor(A / B));
       } else {
-        B = Math.max(1, Math.ceil(A / C));
+        const rawB = Math.max(1, Math.min(A, Math.floor(Number(state.B) || 1)));
+        B = rawB;
         C = Math.max(1, Math.floor(A / B));
       }
 
@@ -1894,9 +2014,10 @@
       if (endDate < startDate) {
         endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
         state.endDateStr = toIso(endDate);
+        showSnackbar("Ngày kết thúc đã được tự động điều chỉnh bằng ngày bắt đầu.");
       }
 
-      const { map: holidayMap, chips: holidayChips } = parseHolidays(state.holidaysText);
+      const { map: holidayMap, chips: holidayChips, invalidTokens } = parseHolidays(state.holidaysText);
 
       let groupCursor = 0;
       let totalCalendarDays = 0;
@@ -1982,8 +2103,6 @@
 
       const avgInterval = gapCount > 0 ? gapSum / gapCount : 0;
 
-      state.B = B;
-      state.C = C;
       state.computed = {
         A,
         B,
@@ -2002,6 +2121,7 @@
         weekdayHolidaysCount,
         holidayMap,
         holidayChips,
+        invalidTokens,
         appliedHolidays,
         yearStats: Array.from(yearStatsMap.values()),
         rows,
@@ -2022,9 +2142,9 @@
       host.innerHTML = chips
         .map(
           (c) => `
-          <span class="m3-chip">
-            <span>${c.label}</span>
-            <button type="button" class="m3-chip-close" data-tok-idx="${c.tokenIndex}" aria-label="Xóa ${c.label}" title="Xóa">&times;</button>
+          <span class="m3-chip" title="${escapeHtml(c.note)}">
+            <span>${escapeHtml(c.label)}</span>
+            <button type="button" class="m3-chip-close" data-tok-idx="${c.tokenIndex}" aria-label="Xóa ${escapeHtml(c.label)}" title="Xóa">&times;</button>
           </span>`
         )
         .join("");
@@ -2034,12 +2154,37 @@
       const data = state.computed;
       if (!data) return;
 
-      document.getElementById("inputA").value = data.A;
-      document.getElementById("inputB").value = data.B;
-      document.getElementById("inputC").value = data.C;
+      const activeEl = document.activeElement;
+      const inputA = document.getElementById("inputA");
+      const inputB = document.getElementById("inputB");
+      const inputC = document.getElementById("inputC");
+
+      // Never overwrite the field currently being typed into by the user
+      if (activeEl !== inputA) inputA.value = data.A;
+      if (activeEl !== inputB) inputB.value = data.B;
+      if (activeEl !== inputC) inputC.value = data.C;
+
       document.getElementById("inputStartDate").value = data.startIso;
       document.getElementById("inputEndDate").value = data.endIso;
       renderHolidayChips(data.holidayChips);
+
+      // Ratio helper hint under C
+      const ratioHint = document.getElementById("groupRatioHint");
+      if (data.remainder === 0) {
+        ratioHint.textContent = `Chia đều ${data.C_prime} nhóm × ${data.B} BN/ngày.`;
+      } else {
+        ratioHint.textContent = `${data.fullGroupsCount} nhóm × ${data.B} BN + nhóm cuối ${data.remainder} BN (tổng C' = ${data.C_prime} nhóm).`;
+      }
+
+      // Holiday parse warning hint
+      const holErr = document.getElementById("holidayErrorHint");
+      if (data.invalidTokens && data.invalidTokens.length > 0) {
+        holErr.style.display = "block";
+        holErr.textContent = `Không nhận diện được ngày: ${data.invalidTokens.join(", ")} (định dạng chuẩn: dd/mm/yyyy).`;
+      } else {
+        holErr.style.display = "none";
+        holErr.textContent = "";
+      }
 
       // Scorecards
       document.getElementById("statCPrime").textContent = `${data.C_prime} nhóm`;
@@ -2055,7 +2200,11 @@
       document.getElementById("statDateRange").textContent = `${data.startDateStr} – ${data.endDateStr}`;
 
       document.getElementById("statSkippedHolidays").textContent = `${data.appliedHolidays.length} ngày`;
-      document.getElementById("statSkippedWeekends").textContent = `+ ${data.totalWeekendDays} ngày T7/CN bỏ qua`;
+      document.getElementById("statSkippedWeekends").textContent = `${data.weekdayHolidaysCount} ngày dịch lịch • +${data.totalWeekendDays} T7/CN`;
+
+      // Lookup clear button visibility
+      const clearLookupBtn = document.getElementById("clearLookupBtn");
+      clearLookupBtn.classList.toggle("visible", Boolean(state.lookupQuery && state.lookupQuery.trim()));
 
       // Tabs
       const isReport = state.activeTab === "report";
@@ -2070,34 +2219,49 @@
       const viewHost = document.getElementById("viewHost");
       const capLeft = document.getElementById("captionLeft");
       const capRight = document.getElementById("captionRight");
+      const toggleColsBtn = document.getElementById("toggleVisitsColsBtn");
 
       if (isReport) {
+        toggleColsBtn.style.display = "none";
         capLeft.textContent = "Báo cáo chi tiết cấu hình phân nhóm (C'), thống kê kỳ xếp lịch và ngày nghỉ đã áp dụng.";
         capRight.textContent = `${data.startDateStr} – ${data.endDateStr}`;
         viewHost.innerHTML = buildReportView(data);
       } else {
-        const cols = Math.min(10, data.maxK);
-        const matchInfo = findMatchedGroup(data, state.lookupQuery);
+        const canExpand = data.maxK > 10;
+        const cols = (canExpand && !state.showAllVisits) ? 10 : data.maxK;
+        const matchResult = findMatchedGroup(data, state.lookupQuery);
 
-        if (matchInfo) {
-          capLeft.innerHTML = `<span class="lookup-badge">BN #${matchInfo.patientNum} → Nhóm ${matchInfo.group.label} (Nhóm thứ ${matchInfo.group.index + 1}/${data.C_prime})</span>`;
+        if (matchResult && matchResult.found) {
+          capLeft.innerHTML = `<span class="lookup-badge">${escapeHtml(matchResult.badgeText)}</span>`;
+        } else if (matchResult && !matchResult.found) {
+          capLeft.innerHTML = `<span class="lookup-badge warn">${escapeHtml(matchResult.badgeText)}</span>`;
         } else {
-          capLeft.textContent = data.maxK > 10
-            ? `Xem trước 10 lần hẹn đầu tiên (file Excel xuất đầy đủ toàn bộ ${data.maxK} lần).`
+          capLeft.textContent = canExpand && !state.showAllVisits
+            ? `Đang hiển thị 10 / ${data.maxK} lần hẹn đầu tiên.`
             : `Hiển thị đầy đủ ${data.maxK} lần hẹn (${data.startDateStr} – ${data.endDateStr}).`;
         }
+
+        if (canExpand) {
+          toggleColsBtn.style.display = "inline-flex";
+          toggleColsBtn.textContent = state.showAllVisits ? "Thu gọn (10 lần đầu)" : `Xem tất cả (${data.maxK} lần)`;
+        } else {
+          toggleColsBtn.style.display = "none";
+        }
+
         capRight.textContent = `${data.C_prime} nhóm • ${data.totalWorkDays} ngày khám`;
-        viewHost.innerHTML = buildScheduleTable(data, cols, matchInfo ? matchInfo.group.index : -1);
+        const highlightIdx = (matchResult && matchResult.found) ? matchResult.group.index : -1;
+        viewHost.innerHTML = buildScheduleTable(data, cols, highlightIdx);
 
         const vp = viewHost.querySelector(".table-viewport");
         if (vp) {
           vp.addEventListener("scroll", () => {
             vp.classList.toggle("scrolled-x", vp.scrollLeft > 2);
           });
-          if (matchInfo) {
+          if (highlightIdx >= 0) {
             const matchedRow = vp.querySelector("tr.is-match");
             if (matchedRow) {
-              matchedRow.scrollIntoView({ block: "nearest", behavior: "smooth" });
+              const targetTop = Math.max(0, matchedRow.offsetTop - vp.clientHeight / 2 + matchedRow.offsetHeight / 2);
+              vp.scrollTop = targetTop;
             }
           }
         }
@@ -2107,11 +2271,62 @@
     function findMatchedGroup(data, query) {
       const q = (query || "").trim();
       if (!q) return null;
-      const num = parseInt(q, 10);
-      if (Number.isNaN(num) || num < 1 || num > data.A) return null;
-      const idx = Math.floor((num - 1) / data.B);
-      const grp = data.groups[idx];
-      return grp ? { patientNum: num, group: grp } : null;
+
+      // Support group search: "nhóm 3", "nhom 3", "#3"
+      const grpMatch = q.match(/^(?:nh[oó]m|#)\s*(\d+)$/i);
+      if (grpMatch) {
+        const gNum = parseInt(grpMatch[1], 10);
+        if (gNum >= 1 && gNum <= data.C_prime) {
+          const grp = data.groups[gNum - 1];
+          return {
+            found: true,
+            group: grp,
+            badgeText: `Nhóm thứ ${gNum}/${data.C_prime}: BN ${grp.label} (${grp.count} BN)`
+          };
+        }
+        return {
+          found: false,
+          badgeText: `Không có Nhóm ${gNum} (tổng cộng ${data.C_prime} nhóm)`
+        };
+      }
+
+      // Support range search: "51 - 100"
+      const rangeMatch = q.match(/^(\d+)\s*[\-–]\s*(\d+)$/);
+      if (rangeMatch) {
+        const firstNum = parseInt(rangeMatch[1], 10);
+        if (firstNum >= 1 && firstNum <= data.A) {
+          const idx = Math.floor((firstNum - 1) / data.B);
+          const grp = data.groups[idx];
+          return {
+            found: true,
+            group: grp,
+            badgeText: `Nhóm ${grp.label} (Nhóm thứ ${grp.index + 1}/${data.C_prime})`
+          };
+        }
+      }
+
+      // Default: Patient STT lookup
+      if (/^\d+$/.test(q)) {
+        const num = parseInt(q, 10);
+        if (num >= 1 && num <= data.A) {
+          const idx = Math.floor((num - 1) / data.B);
+          const grp = data.groups[idx];
+          return {
+            found: true,
+            group: grp,
+            badgeText: `BN #${num} → Nhóm ${grp.label} (Nhóm thứ ${grp.index + 1}/${data.C_prime})`
+          };
+        }
+        return {
+          found: false,
+          badgeText: `Không tìm thấy BN #${num} (phạm vi hợp lệ: 1 – ${data.A})`
+        };
+      }
+
+      return {
+        found: false,
+        badgeText: `Nhập STT bệnh nhân (1 – ${data.A}) hoặc Nhóm (1 – ${data.C_prime})`
+      };
     }
 
     function buildScheduleTable(data, maxCols, highlightIdx = -1) {
@@ -2235,7 +2450,7 @@
                   <th>Ngày khám xếp lịch</th>
                   <th>T7/CN bỏ qua</th>
                   <th>Ngày nghỉ đã bỏ qua</th>
-                  <th>Lần hẹn tối đa (K)</th>
+                  <th>Vòng quay TB / nhóm</th>
                   <th>Khoảng cách TB</th>
                 </tr>
               </thead>
@@ -2244,21 +2459,22 @@
                   <td><strong>Toàn kỳ (${data.startDateStr} – ${data.endDateStr})</strong></td>
                   <td><strong>${data.totalWorkDays} ngày</strong></td>
                   <td>${data.totalWeekendDays} ngày</td>
-                  <td><strong>${data.appliedHolidays.length} ngày</strong> (${data.weekdayHolidaysCount} ngày thường)</td>
-                  <td><strong>${data.maxK} lần</strong></td>
+                  <td><strong>${data.appliedHolidays.length} ngày</strong> (${data.weekdayHolidaysCount} ngày dịch lịch)</td>
+                  <td><strong>Tối đa ${data.maxK} lần</strong></td>
                   <td>${data.avgInterval > 0 ? data.avgInterval.toFixed(1) + " ngày" : "—"}</td>
                 </tr>
       `;
 
       data.yearStats.forEach((ys) => {
+        const avgTurnsInYear = data.C_prime > 0 ? (ys.workDays / data.C_prime).toFixed(1) : "0";
         html += `
           <tr>
             <td>Năm ${ys.year}</td>
             <td>${ys.workDays} ngày</td>
             <td>${ys.weekendDays} ngày</td>
-            <td>${ys.holidaysCount} ngày (${ys.weekdayHolidaysCount} ngày thường)</td>
-            <td>—</td>
-            <td>—</td>
+            <td>${ys.holidaysCount} ngày (${ys.weekdayHolidaysCount} ngày dịch lịch)</td>
+            <td>~${avgTurnsInYear} lần/nhóm</td>
+            <td>${data.avgInterval > 0 ? "~" + data.avgInterval.toFixed(1) + " ngày" : "—"}</td>
           </tr>
         `;
       });
@@ -2295,7 +2511,7 @@
               <td>${h.weekday}</td>
               <td>${h.year}</td>
               <td><span class="status-badge${h.isWeekend ? " weekend" : ""}">${h.isWeekend ? "Trùng T7/CN" : "Đã bỏ qua (dịch lịch)"}</span></td>
-              <td>${h.note}</td>
+              <td>${escapeHtml(h.note)}</td>
             </tr>
           `;
         });
@@ -2311,9 +2527,14 @@
     function handleExportExcel() {
       if (!state.computed) computeSchedule();
       const data = state.computed;
-      const CCol = PureXlsxBuilder.colLetter;
 
-      const visitCols = data.maxK > 0 ? (data.maxK * 2 - 1) : 1;
+      if (data.maxK === 0) {
+        showSnackbar("Không có ngày khám nào trong khoảng thời gian đã chọn để xuất Excel.");
+        return;
+      }
+
+      const CCol = PureXlsxBuilder.colLetter;
+      const visitCols = data.maxK * 2 - 1;
       const totalCols = Math.max(12, 3 + visitCols);
       const lastCol = CCol(totalCols - 1);
 
@@ -2480,15 +2701,18 @@
       }
       rows.push({ cells: rSum, ht: 24 });
 
-      // Legend Footnote
+      // Legend Footnote + Holiday summary
       rows.push({ cells: [], ht: 8 });
       const noteRowNum = summaryRowNum + 2;
       const rNote = makeBlankCells();
+      const holidaySummaryText = data.appliedHolidays.length > 0
+        ? ` | Ngày nghỉ lễ đã loại trừ (${data.appliedHolidays.length} ngày): ${data.appliedHolidays.map((h) => h.dateStr).join(", ")}.`
+        : "";
       rNote[0] = {
-        v: "Ghi chú: Lịch tự động bỏ qua Thứ Bảy, Chủ Nhật và các ngày nghỉ đã cấu hình. Ô giãn cách tô vàng nhạt biểu thị chu kỳ dài hơn mức trung bình do trùng ngày nghỉ/cuối tuần.",
+        v: `Ghi chú: Lịch tự động bỏ qua Thứ Bảy, Chủ Nhật và các ngày nghỉ đã cấu hình. Ô giãn cách tô vàng nhạt biểu thị chu kỳ dài hơn mức trung bình do trùng ngày nghỉ/cuối tuần.${holidaySummaryText}`,
         s: 17
       };
-      rows.push({ cells: rNote, ht: 20 });
+      rows.push({ cells: rNote, ht: data.appliedHolidays.length > 8 ? 34 : 22 });
       merges.push(`A${noteRowNum}:${lastCol}${noteRowNum}`);
 
       const sheets = [{
@@ -2515,8 +2739,12 @@
     function handlePrint() {
       if (!state.computed) computeSchedule();
       const data = state.computed;
-      const printHost = document.getElementById("printHost");
+      if (data.maxK === 0) {
+        showSnackbar("Không có ngày khám nào để in.");
+        return;
+      }
 
+      const printHost = document.getElementById("printHost");
       let html = `
         <div class="print-header">
           <h1>BẢNG LỊCH HẸN BỆNH NHÂN (${data.startDateStr} – ${data.endDateStr})</h1>
@@ -2527,8 +2755,13 @@
 
       printHost.innerHTML = html;
       printHost.style.display = "block";
+
+      const cleanup = () => {
+        printHost.style.display = "none";
+        window.removeEventListener("afterprint", cleanup);
+      };
+      window.addEventListener("afterprint", cleanup);
       window.print();
-      setTimeout(() => { printHost.style.display = "none"; }, 400);
     }
 
     /* ==========================================================================
@@ -2536,17 +2769,20 @@
        ========================================================================== */
     function applyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
-      localStorage.setItem(STORAGE_KEYS.THEME, theme);
+      try {
+        localStorage.setItem(STORAGE_KEYS.THEME, theme);
+      } catch (e) {}
       document.getElementById("iconSun").style.display = theme === "dark" ? "block" : "none";
       document.getElementById("iconMoon").style.display = theme === "dark" ? "none" : "block";
     }
 
     function saveStorage() {
+      if (!state.computed) return;
       try {
         localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify({
-          A: state.A,
-          B: state.B,
-          C: state.C,
+          A: state.computed.A,
+          B: state.computed.B,
+          C: state.computed.C,
           driver: state.driver,
           startDateStr: state.startDateStr,
           endDateStr: state.endDateStr
@@ -2556,7 +2792,11 @@
     }
 
     function loadStorage() {
-      const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+      let savedTheme = null;
+      try {
+        savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+      } catch (e) {}
+
       if (savedTheme === "dark" || savedTheme === "light") {
         applyTheme(savedTheme);
       } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
@@ -2572,12 +2812,12 @@
       try {
         const cfg = JSON.parse(localStorage.getItem(STORAGE_KEYS.CONFIG) || "null");
         if (cfg) {
-          if (cfg.A) state.A = cfg.A;
-          if (cfg.B) state.B = cfg.B;
-          if (cfg.C) state.C = cfg.C;
-          if (cfg.driver) state.driver = cfg.driver;
-          if (cfg.startDateStr) state.startDateStr = cfg.startDateStr;
-          if (cfg.endDateStr) state.endDateStr = cfg.endDateStr;
+          if (cfg.A && Number(cfg.A) >= 1) state.A = Math.floor(Number(cfg.A));
+          if (cfg.B && Number(cfg.B) >= 1) state.B = Math.floor(Number(cfg.B));
+          if (cfg.C && Number(cfg.C) >= 1) state.C = Math.floor(Number(cfg.C));
+          if (cfg.driver === "B" || cfg.driver === "C") state.driver = cfg.driver;
+          if (cfg.startDateStr && parseIso(cfg.startDateStr)) state.startDateStr = cfg.startDateStr;
+          if (cfg.endDateStr && parseIso(cfg.endDateStr)) state.endDateStr = cfg.endDateStr;
         }
         const hol = localStorage.getItem(STORAGE_KEYS.HOLIDAYS);
         if (hol !== null) state.holidaysText = hol;
@@ -2595,6 +2835,16 @@
       computeSchedule();
       renderUI();
       saveStorage();
+    }
+
+    function syncNormalizedNumericInputs() {
+      if (!state.computed) return;
+      state.A = state.computed.A;
+      state.B = state.computed.B;
+      state.C = state.computed.C;
+      document.getElementById("inputA").value = state.A;
+      document.getElementById("inputB").value = state.B;
+      document.getElementById("inputC").value = state.C;
     }
 
     /* ==========================================================================
@@ -2616,31 +2866,38 @@
         showSnackbar(next === "dark" ? "Đã chuyển sang giao diện Tối" : "Đã chuyển sang giao diện Sáng");
       });
 
-      document.getElementById("inputA").addEventListener("input", (e) => {
+      const inputA = document.getElementById("inputA");
+      const inputB = document.getElementById("inputB");
+      const inputC = document.getElementById("inputC");
+
+      inputA.addEventListener("input", (e) => {
         const v = parseInt(e.target.value, 10);
         if (!Number.isNaN(v) && v >= 1) {
-          state.A = v;
+          state.A = Math.min(100000, v);
           updateAll();
         }
       });
+      inputA.addEventListener("blur", syncNormalizedNumericInputs);
 
-      document.getElementById("inputB").addEventListener("input", (e) => {
+      inputB.addEventListener("input", (e) => {
         const v = parseInt(e.target.value, 10);
         if (!Number.isNaN(v) && v >= 1) {
           state.driver = "B";
-          state.B = v;
+          state.B = Math.min(100000, v);
           updateAll();
         }
       });
+      inputB.addEventListener("blur", syncNormalizedNumericInputs);
 
-      document.getElementById("inputC").addEventListener("input", (e) => {
+      inputC.addEventListener("input", (e) => {
         const v = parseInt(e.target.value, 10);
         if (!Number.isNaN(v) && v >= 1) {
           state.driver = "C";
-          state.C = v;
+          state.C = Math.min(100000, v);
           updateAll();
         }
       });
+      inputC.addEventListener("blur", syncNormalizedNumericInputs);
 
       document.getElementById("inputStartDate").addEventListener("change", (e) => {
         if (e.target.value) {
@@ -2666,10 +2923,10 @@
         const btn = e.target.closest(".m3-chip-close");
         if (!btn) return;
         const removeIdx = Number(btn.dataset.tokIdx);
-        const tokens = state.holidaysText.split(/[\n\r;,]+/);
+        const tokens = splitHolidayTokens(state.holidaysText);
         const next = tokens
+          .filter((t, idx) => idx !== removeIdx && t.trim() !== "")
           .map((t) => t.trim())
-          .filter((_, idx) => idx !== removeIdx && tokens[idx].trim() !== "")
           .join("\n");
         state.holidaysText = next;
         document.getElementById("inputHolidays").value = next;
@@ -2684,6 +2941,7 @@
       document.getElementById("addRangeBtn").addEventListener("click", () => {
         const s = parseIso(document.getElementById("pickStart").value);
         const e = parseIso(document.getElementById("pickEnd").value);
+        const note = document.getElementById("pickNote").value.trim();
         if (!s) {
           showSnackbar("Vui lòng chọn ngày bắt đầu nghỉ.");
           return;
@@ -2694,12 +2952,16 @@
           const d2 = s <= e ? e : s;
           line = `${toVNDate(d1)} - ${toVNDate(d2)}`;
         }
+        if (note) {
+          line = `${line} (${note.replace(/[()]/g, "")})`;
+        }
         const cur = document.getElementById("inputHolidays").value.trim();
         const next = cur ? `${cur}\n${line}` : line;
         document.getElementById("inputHolidays").value = next;
         state.holidaysText = next;
         document.getElementById("pickStart").value = "";
         document.getElementById("pickEnd").value = "";
+        document.getElementById("pickNote").value = "";
         updateAll();
         showSnackbar(`Đã thêm ngày nghỉ: ${line}`);
       });
@@ -2713,6 +2975,19 @@
 
       document.getElementById("lookupInput").addEventListener("input", (e) => {
         state.lookupQuery = e.target.value;
+        renderUI();
+      });
+
+      document.getElementById("clearLookupBtn").addEventListener("click", () => {
+        state.lookupQuery = "";
+        const inp = document.getElementById("lookupInput");
+        inp.value = "";
+        inp.focus();
+        renderUI();
+      });
+
+      document.getElementById("toggleVisitsColsBtn").addEventListener("click", () => {
+        state.showAllVisits = !state.showAllVisits;
         renderUI();
       });
 
@@ -2736,6 +3011,7 @@
         state.endDateStr = defaults.endStr;
         state.holidaysText = "";
         state.lookupQuery = "";
+        state.showAllVisits = false;
         state.activeTab = "schedule";
 
         document.getElementById("inputA").value = 1300;
