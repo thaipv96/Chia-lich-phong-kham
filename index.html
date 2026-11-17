@@ -1,878 +1,2757 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Công cụ tính lịch hẹn bệnh nhân — by Bác sĩ Phạm Văn Thái">
-<title>Công cụ tính lịch hẹn bệnh nhân</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231e40af'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-size='16' fill='white' font-weight='bold' font-family='Arial'%3ELH%3C/text%3E%3C/svg%3E">
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-<style>
-:root{
-  --primary:#1e40af;--primary-light:#3b82f6;--success:#059669;--success-hover:#047857;
-  --warn:#f59e0b;--warn-bg:#fef3c7;--warn-fg:#78350f;--danger:#dc2626;--danger-bg:#fee2e2;--danger-fg:#7f1d1d;
-  --purple:#7c3aed;--purple-hover:#6d28d9;--bg:#f4f6f9;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;
-}
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
-body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-header h1{margin:0 0 4px;font-size:22px;display:flex;align-items:center;gap:8px;}
-header p{margin:0;opacity:.9;font-size:13px;font-style:italic;}
-.app{display:grid;grid-template-columns:380px minmax(0,1fr);gap:20px;padding:20px;max-width:1680px;margin:0 auto;}
-@media (max-width:960px){.app{grid-template-columns:1fr;}}
-.form,.preview{background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
-.form{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow-y:auto;}
-.form h2,.preview h2{margin:0 0 16px;font-size:15px;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
-label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px;color:#334155;}
-input[type=number],input[type=date],textarea{width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);transition:border-color .15s,box-shadow .15s;}
-input:focus,textarea:focus{outline:none;border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
-input[readonly]{background:#f1f5f9;color:var(--muted);cursor:not-allowed;}
-fieldset{border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px;margin:12px 0;}
-fieldset legend{font-size:12px;color:var(--muted);padding:0 4px;}
-fieldset label{display:inline-flex;align-items:center;gap:4px;margin:0 16px 0 0;font-weight:500;cursor:pointer;}
-fieldset input{margin:0;cursor:pointer;}
-.hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.55;}
-.hint code{background:#f1f5f9;padding:1px 5px;border-radius:3px;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#0f172a;}
-button{margin-top:14px;padding:10px 16px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:background .15s,opacity .15s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
-button:disabled{background:#94a3b8 !important;color:#fff !important;cursor:not-allowed;opacity:.85;}
-#previewBtn{background:var(--primary-light);color:#fff;}
-#previewBtn:hover:not(:disabled){background:#2563eb;}
-#previewBtn.dirty{animation:pulse 1.4s ease-in-out infinite;}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.6);}50%{box-shadow:0 0 0 8px rgba(59,130,246,0);}}
-#exportBtn{background:var(--success);color:#fff;}
-#exportBtn:hover:not(:disabled){background:var(--success-hover);}
-#resetBtn{background:#e2e8f0;color:#334155;margin-top:8px;}
-#resetBtn:hover{background:#cbd5e1;}
-#printBtn{width:auto;margin:0;padding:8px 14px;background:var(--purple);color:#fff;font-size:13px;white-space:nowrap;}
-#printBtn:hover:not(:disabled){background:var(--purple-hover);}
-.warn{background:var(--warn-bg);border-left:4px solid var(--warn);padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:10px;color:var(--warn-fg);line-height:1.5;}
-.warn strong{display:block;margin-bottom:3px;font-weight:700;}
-.warn.error{background:var(--danger-bg);border-left-color:var(--danger);color:var(--danger-fg);}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px;}
-.stat{background:#eff6ff;padding:12px 14px;border-radius:8px;border-left:3px solid var(--primary-light);}
-.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.3px;}
-.stat-value{font-size:18px;font-weight:700;color:var(--primary);margin-top:2px;}
-.tabs-row{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px;border-bottom:2px solid var(--border);padding-bottom:0;}
-.tabs{display:flex;gap:4px;overflow-x:auto;flex:1;scrollbar-width:thin;}
-.tabs::-webkit-scrollbar{height:4px;}
-.tabs::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px;}
-.tab{padding:8px 14px;border:none;background:transparent;color:var(--muted);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;font-size:13px;font-family:inherit;width:auto;transition:color .15s,border-color .15s;}
-.tab:hover:not(.active){color:var(--primary-light);}
-.tab.active{color:var(--primary);border-bottom-color:var(--primary-light);}
-.tab .count{opacity:.65;font-weight:500;font-size:12px;margin-left:3px;}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-th,td{border:1px solid var(--border);padding:8px 10px;text-align:center;}
-th{background:var(--primary);color:#fff;font-weight:600;font-size:12px;}
-td.group-cell{font-weight:700;background:#f8fafc;text-align:left;white-space:nowrap;}
-td.kc{background:#f0f9ff;color:#0369a1;font-weight:600;font-size:12px;}
-td.date{font-family:ui-monospace,Consolas,monospace;font-size:12px;}
-td.date small{color:#94a3b8;font-size:10px;font-weight:400;}
-td.empty{background:#f8fafc;color:#cbd5e1;}
-tr:hover td{background:#f1f5f9;}
-tr:hover td.group-cell{background:#e0e7ff;}
-.scroll-x{overflow-x:auto;max-width:100%;}
-.notice{font-size:12px;color:var(--muted);margin-top:12px;font-style:italic;}
-.print-header{display:none;}
-@media print{
-  body{background:#fff;}
-  header,.form,#warnings,#stats,.stats,.tabs-row,#exportBtn,#previewBtn,#resetBtn,.no-print,.notice{display:none !important;}
-  .app{display:block;padding:0;gap:0;max-width:none;}
-  .preview{box-shadow:none;padding:0;background:#fff;border-radius:0;}
-  .preview > h2{display:none;}
-  .print-header{display:block;margin:0 0 10px;}
-  .print-header h2{color:#000;font-size:16px;text-align:center;margin:0 0 2px;letter-spacing:.5px;}
-  .print-header .by-line{text-align:center;font-size:11px;font-style:italic;margin:0 0 6px;color:#333;}
-  .print-header .meta{text-align:center;font-size:10px;color:#333;margin:0;}
-  .scroll-x{overflow:visible;}
-  table{font-size:9px;}
-  th,td{padding:3px 4px;border:1px solid #000;}
-  th{background:#ddd !important;color:#000 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  td.kc{background:#f3f4f6 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  td.group-cell{background:#f3f4f6 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  @page{size:A4 landscape;margin:.8cm;}
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Công cụ tính lịch hẹn bệnh nhân — bởi Bác sĩ Phạm Văn Thái</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ==========================================================================
+       GOOGLE MATERIAL DESIGN 3 (M3) — DESIGN TOKENS & TONAL SURFACE SYSTEM
+       ========================================================================== */
+    :root {
+      /* Google Signature Brand Accents */
+      --g-blue: #4285f4;
+      --g-red: #ea4335;
+      --g-yellow: #fbbc04;
+      --g-green: #34a853;
+
+      /* M3 Light Color Scheme (Google Workspace / Calendar Tonal Palette) */
+      --md-sys-color-primary: #0b57d0;
+      --md-sys-color-on-primary: #ffffff;
+      --md-sys-color-primary-container: #d3e3fd;
+      --md-sys-color-on-primary-container: #041e49;
+
+      --md-sys-color-secondary-container: #e8def8;
+      --md-sys-color-on-secondary-container: #1d192b;
+
+      --md-sys-color-tertiary: #146c2e;
+      --md-sys-color-tertiary-container: #c4eed0;
+      --md-sys-color-on-tertiary-container: #072711;
+
+      --md-sys-color-warning: #8f4e00;
+      --md-sys-color-warning-container: #ffdf9e;
+      --md-sys-color-on-warning-container: #2c1600;
+
+      --md-sys-color-error: #b3261e;
+
+      /* Tonal Surfaces (No heavy borders — elevation via subtle tonal steps) */
+      --md-sys-color-background: #f8fafd;
+      --md-sys-color-surface: #f8fafd;
+      --md-sys-color-surface-container-lowest: #ffffff;
+      --md-sys-color-surface-container-low: #f0f4f9;
+      --md-sys-color-surface-container: #e9eef6;
+      --md-sys-color-surface-container-high: #dde3ea;
+
+      --md-sys-color-on-surface: #1f1f1f;
+      --md-sys-color-on-surface-variant: #444746;
+      --md-sys-color-outline: #747775;
+      --md-sys-color-outline-variant: #c4c7c5;
+      --md-sys-color-hairline: rgba(31, 31, 31, 0.08);
+
+      /* State Layers */
+      --state-hover: rgba(11, 87, 208, 0.06);
+      --state-pressed: rgba(11, 87, 208, 0.12);
+      --state-neutral-hover: rgba(31, 31, 31, 0.05);
+
+      /* Elevation & Motion */
+      --elev-1: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px 1px rgba(0, 0, 0, 0.04);
+      --elev-2: 0 1px 2px rgba(0, 0, 0, 0.08), 0 2px 6px 2px rgba(0, 0, 0, 0.05);
+      --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+      /* Typography */
+      --font-display: 'Plus Jakarta Sans', 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      /* Shapes */
+      --shape-xs: 8px;
+      --shape-sm: 12px;
+      --shape-md: 16px;
+      --shape-lg: 24px;
+      --shape-full: 9999px;
+    }
+
+    [data-theme="dark"] {
+      /* Pitch-Black AMOLED Canvas + Google M3 Dark Tonal Containers */
+      --md-sys-color-primary: #a8c7fa;
+      --md-sys-color-on-primary: #062e6f;
+      --md-sys-color-primary-container: #0842a0;
+      --md-sys-color-on-primary-container: #d3e3fd;
+
+      --md-sys-color-tertiary: #6dd58c;
+      --md-sys-color-tertiary-container: #0f5223;
+      --md-sys-color-on-tertiary-container: #c4eed0;
+
+      --md-sys-color-warning: #ffb951;
+      --md-sys-color-warning-container: #5c3800;
+      --md-sys-color-on-warning-container: #ffdf9e;
+
+      --md-sys-color-error: #f2b8b5;
+
+      --md-sys-color-background: #000000;
+      --md-sys-color-surface: #000000;
+      --md-sys-color-surface-container-lowest: #0d0e10;
+      --md-sys-color-surface-container-low: #131417;
+      --md-sys-color-surface-container: #1b1d21;
+      --md-sys-color-surface-container-high: #25282e;
+
+      --md-sys-color-on-surface: #e3e3e3;
+      --md-sys-color-on-surface-variant: #c4c7c5;
+      --md-sys-color-outline: #8e918f;
+      --md-sys-color-outline-variant: #444746;
+      --md-sys-color-hairline: rgba(255, 255, 255, 0.08);
+
+      --state-hover: rgba(168, 199, 250, 0.08);
+      --state-pressed: rgba(168, 199, 250, 0.14);
+      --state-neutral-hover: rgba(227, 227, 227, 0.06);
+
+      --elev-1: none;
+      --elev-2: 0 2px 8px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ==========================================================================
+       RESET & BASE
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-surface);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background-color 0.25s var(--ease-standard), color 0.25s var(--ease-standard);
+    }
+
+    /* ==========================================================================
+       GOOGLE TOP APP BAR (64px M3 Standard)
+       ========================================================================== */
+    .app-bar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      height: 64px;
+      padding: 0 24px;
+      background-color: var(--md-sys-color-surface);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid transparent;
+      transition: background-color 0.25s var(--ease-standard), border-color 0.2s var(--ease-standard), box-shadow 0.2s var(--ease-standard);
+    }
+
+    .app-bar.is-scrolled {
+      background-color: var(--md-sys-color-surface-container-low);
+      border-bottom-color: var(--md-sys-color-hairline);
+      box-shadow: var(--elev-1);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    /* Authentic Google 4-accent Calendar Emblem */
+    .app-emblem {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--shape-sm);
+      background-color: var(--md-sys-color-surface-container-lowest);
+      box-shadow: var(--elev-1);
+      border: 1px solid var(--md-sys-color-hairline);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--md-sys-color-primary);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .app-emblem::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--g-blue) 0% 25%, var(--g-red) 25% 50%, var(--g-yellow) 50% 75%, var(--g-green) 75% 100%);
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      color: var(--md-sys-color-on-surface);
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-subtitle {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: var(--md-sys-color-on-surface-variant);
+      line-height: 1.2;
+      margin-top: 1px;
+    }
+
+    .app-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+       MATERIAL 3 BUTTONS, ICON BUTTONS & RIPPLE STATE LAYERS
+       ========================================================================== */
+    .m3-btn,
+    .m3-icon-btn,
+    .m3-text-btn {
+      position: relative;
+      overflow: hidden;
+      font-family: var(--font-display);
+      cursor: pointer;
+      user-select: none;
+      border: none;
+      outline: none;
+      transition: background-color 0.2s var(--ease-standard), box-shadow 0.2s var(--ease-standard), color 0.2s var(--ease-standard), transform 0.1s var(--ease-standard);
+    }
+
+    .m3-btn:active,
+    .m3-icon-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* M3 Standard Icon Button (40x40 circular state layer) */
+    .m3-icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--shape-full);
+      background-color: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .m3-icon-btn:hover {
+      background-color: var(--state-neutral-hover);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .m3-icon-btn:focus-visible {
+      outline: 2px solid var(--md-sys-color-primary);
+      outline-offset: 2px;
+    }
+
+    .m3-icon-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* M3 Filled Pill Button (Primary CTA) */
+    .m3-btn-filled {
+      height: 40px;
+      padding: 0 20px;
+      border-radius: var(--shape-full);
+      background-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      font-size: 0.875rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .m3-btn-filled:hover {
+      box-shadow: var(--elev-1);
+      filter: brightness(1.04);
+    }
+
+    .m3-btn-filled:focus-visible {
+      outline: 2px solid var(--md-sys-color-primary);
+      outline-offset: 2px;
+    }
+
+    /* M3 Tonal / Outlined Button */
+    .m3-btn-tonal {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: var(--shape-full);
+      background-color: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .m3-btn-tonal:hover {
+      background-color: var(--md-sys-color-surface-container-high);
+    }
+
+    .m3-btn svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    /* M3 Text Button */
+    .m3-text-btn {
+      height: 32px;
+      padding: 0 10px;
+      border-radius: var(--shape-full);
+      background: transparent;
+      color: var(--md-sys-color-primary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .m3-text-btn:hover {
+      background-color: var(--state-hover);
+    }
+
+    .m3-text-btn.muted {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .m3-text-btn.muted:hover {
+      background-color: var(--state-neutral-hover);
+    }
+
+    /* Ripple Circle */
+    .m3-ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: m3-ripple-anim 500ms var(--ease-standard);
+      background-color: currentColor;
+      opacity: 0.16;
+      pointer-events: none;
+    }
+
+    @keyframes m3-ripple-anim {
+      to {
+        transform: scale(3.5);
+        opacity: 0;
+      }
+    }
+
+    /* ==========================================================================
+       GOOGLE WORKSPACE SHELL (TWO-PANE TONAL ARCHITECTURE)
+       ========================================================================== */
+    .workspace {
+      max-width: 1520px;
+      margin: 0 auto;
+      padding: 12px 24px 48px;
+      display: grid;
+      grid-template-columns: 368px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Left Navigation/Parameter Drawer (Tonal Surface Container Low) */
+    .param-sheet {
+      position: sticky;
+      top: 76px;
+      background-color: var(--md-sys-color-surface-container-low);
+      border-radius: var(--shape-lg);
+      padding: 20px;
+      border: 1px solid var(--md-sys-color-hairline);
+    }
+
+    .sheet-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 0 2px;
+    }
+
+    .sheet-title {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sheet-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--md-sys-color-primary);
+    }
+
+    /* ==========================================================================
+       MATERIAL 3 OUTLINED FORM FIELDS
+       ========================================================================== */
+    .m3-field {
+      margin-bottom: 14px;
+    }
+
+    .m3-field:last-child {
+      margin-bottom: 0;
+    }
+
+    .m3-field-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      padding: 0 2px;
+    }
+
+    .m3-label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface-variant);
+      line-height: 1.35;
+    }
+
+    .m3-field-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .m3-input-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background-color: var(--md-sys-color-surface-container-lowest);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: var(--shape-sm);
+      transition: border-color 0.15s var(--ease-standard), box-shadow 0.15s var(--ease-standard);
+    }
+
+    .m3-input-box:hover {
+      border-color: var(--md-sys-color-on-surface);
+    }
+
+    .m3-input-box:focus-within {
+      border-color: var(--md-sys-color-primary);
+      box-shadow: 0 0 0 2px var(--md-sys-color-primary);
+    }
+
+    .m3-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface);
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      outline: none;
+    }
+
+    .m3-unit {
+      padding-right: 14px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--md-sys-color-outline);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    textarea.m3-input {
+      height: auto;
+      min-height: 84px;
+      padding: 10px 14px;
+      resize: vertical;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .m3-divider {
+      height: 1px;
+      background-color: var(--md-sys-color-hairline);
+      margin: 16px 0;
+    }
+
+    /* Collapsible M3 Date-Range Drawer */
+    .range-drawer {
+      display: none;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: var(--md-sys-color-surface-container);
+      border-radius: var(--shape-sm);
+      gap: 8px;
+      grid-template-columns: 1fr 1fr auto;
+      align-items: center;
+    }
+
+    .range-drawer.open {
+      display: grid;
+    }
+
+    .range-drawer .m3-input {
+      height: 36px;
+      padding: 0 8px;
+      font-size: 0.8rem;
+      background-color: var(--md-sys-color-surface-container-lowest);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: var(--shape-xs);
+    }
+
+    /* Parsed Holiday M3 Input Chips */
+    .chip-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .chip-cloud:empty {
+      display: none;
+    }
+
+    .m3-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 28px;
+      padding: 0 8px 0 10px;
+      border-radius: var(--shape-xs);
+      background-color: var(--md-sys-color-surface-container-lowest);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      color: var(--md-sys-color-on-surface);
+      font-size: 0.76rem;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .m3-chip-close {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .m3-chip-close:hover {
+      background-color: var(--state-neutral-hover);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    /* ==========================================================================
+       RIGHT CANVAS: GOOGLE ANALYTICS SCORECARDS + WORKSPACE SHEET
+       ========================================================================== */
+    .canvas-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    /* 4 Google Scorecards */
+    .scorecard-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .scorecard {
+      background-color: var(--md-sys-color-surface-container-lowest);
+      border: 1px solid var(--md-sys-color-hairline);
+      border-radius: var(--shape-md);
+      padding: 16px 18px;
+      box-shadow: var(--elev-1);
+      transition: background-color 0.2s var(--ease-standard);
+    }
+
+    .scorecard-label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface-variant);
+      margin-bottom: 6px;
+    }
+
+    .scorecard-value {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--md-sys-color-on-surface);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+
+    .scorecard-meta {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: var(--md-sys-color-on-surface-variant);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Primary Workspace Sheet */
+    .workspace-sheet {
+      background-color: var(--md-sys-color-surface-container-lowest);
+      border: 1px solid var(--md-sys-color-hairline);
+      border-radius: var(--shape-lg);
+      box-shadow: var(--elev-1);
+      overflow: hidden;
+    }
+
+    /* M3 Primary Navigation Tabs + Toolbar */
+    .sheet-toolbar {
+      padding: 0 20px;
+      min-height: 54px;
+      border-bottom: 1px solid var(--md-sys-color-hairline);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .m3-tabs {
+      display: flex;
+      align-items: stretch;
+      gap: 4px;
+      height: 54px;
+    }
+
+    .m3-tab {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.2s var(--ease-standard), background-color 0.2s var(--ease-standard);
+    }
+
+    .m3-tab:hover {
+      background-color: var(--state-neutral-hover);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .m3-tab.active {
+      color: var(--md-sys-color-primary);
+    }
+
+    .m3-tab.active::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 0;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background-color: var(--md-sys-color-primary);
+    }
+
+    .m3-tab svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+    }
+
+    /* Google-style Inline Search Pill for Patient / Group Lookup */
+    .m3-search-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--shape-full);
+      background-color: var(--md-sys-color-surface-container-low);
+      border: 1px solid transparent;
+      transition: background-color 0.2s var(--ease-standard), border-color 0.2s var(--ease-standard);
+    }
+
+    .m3-search-pill:focus-within {
+      background-color: var(--md-sys-color-surface-container-lowest);
+      border-color: var(--md-sys-color-primary);
+    }
+
+    .m3-search-pill svg {
+      width: 16px;
+      height: 16px;
+      color: var(--md-sys-color-on-surface-variant);
+      flex-shrink: 0;
+    }
+
+    .m3-search-pill input {
+      width: 175px;
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      outline: none;
+    }
+
+    .m3-search-pill input::placeholder {
+      color: var(--md-sys-color-outline);
+    }
+
+    /* Sub-header Info Strip */
+    .sheet-subbar {
+      padding: 10px 20px;
+      background-color: var(--md-sys-color-surface-container-low);
+      border-bottom: 1px solid var(--md-sys-color-hairline);
+      font-size: 0.8rem;
+      color: var(--md-sys-color-on-surface-variant);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .lookup-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 10px;
+      border-radius: var(--shape-full);
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      font-weight: 500;
+      font-size: 0.78rem;
+    }
+
+    /* ==========================================================================
+       GOOGLE DATA TABLE (STICKY FROZEN COLUMN WITH SCROLL SHADOW)
+       ========================================================================== */
+    .table-viewport {
+      width: 100%;
+      overflow-x: auto;
+      max-height: 620px;
+      overflow-y: auto;
+    }
+
+    table.m3-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.84rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    table.m3-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background-color: var(--md-sys-color-surface-container-lowest);
+      color: var(--md-sys-color-on-surface-variant);
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-align: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      white-space: nowrap;
+    }
+
+    table.m3-table thead th:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 20;
+      color: var(--md-sys-color-on-surface);
+      border-right: 1px solid var(--md-sys-color-hairline);
+    }
+
+    table.m3-table tbody td {
+      padding: 10px 14px;
+      text-align: center;
+      border-bottom: 1px solid var(--md-sys-color-hairline);
+      white-space: nowrap;
+      color: var(--md-sys-color-on-surface);
+      transition: background-color 0.12s var(--ease-standard);
+    }
+
+    table.m3-table tbody td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 5;
+      background-color: var(--md-sys-color-surface-container-lowest);
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: var(--md-sys-color-primary);
+      border-right: 1px solid var(--md-sys-color-hairline);
+    }
+
+    /* Dynamic scroll shadow when horizontal scroll > 0 */
+    .table-viewport.scrolled-x table.m3-table thead th:first-child,
+    .table-viewport.scrolled-x table.m3-table tbody td:first-child {
+      box-shadow: 4px 0 10px -4px rgba(0, 0, 0, 0.14);
+    }
+
+    table.m3-table tbody tr:hover td {
+      background-color: var(--state-hover);
+    }
+
+    table.m3-table tbody tr:hover td:first-child {
+      background-color: var(--md-sys-color-surface-container-low);
+    }
+
+    table.m3-table tbody tr.is-remainder td:first-child {
+      color: var(--md-sys-color-warning);
+    }
+
+    table.m3-table tbody tr.is-match td {
+      background-color: var(--md-sys-color-primary-container) !important;
+      color: var(--md-sys-color-on-primary-container) !important;
+      font-weight: 600;
+    }
+
+    .cell-date {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+
+    .cell-gap {
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 0.8rem;
+    }
+
+    .gap-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--shape-full);
+      background-color: var(--md-sys-color-warning-container);
+      color: var(--md-sys-color-on-warning-container);
+      font-weight: 500;
+      font-size: 0.76rem;
+    }
+
+    /* ==========================================================================
+       REPORT VIEW (ON HTML UI ONLY)
+       ========================================================================== */
+    .report-container {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .report-section-title {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface);
+      margin-bottom: 12px;
+    }
+
+    .m3-report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      font-variant-numeric: tabular-nums;
+      border: 1px solid var(--md-sys-color-hairline);
+      border-radius: var(--shape-sm);
+      overflow: hidden;
+    }
+
+    .m3-report-table th,
+    .m3-report-table td {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--md-sys-color-hairline);
+      text-align: left;
+    }
+
+    .m3-report-table th {
+      font-family: var(--font-display);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface-variant);
+      background-color: var(--md-sys-color-surface-container-low);
+    }
+
+    .m3-report-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 10px;
+      border-radius: var(--shape-full);
+      font-size: 0.76rem;
+      font-weight: 500;
+      background-color: var(--md-sys-color-warning-container);
+      color: var(--md-sys-color-on-warning-container);
+    }
+
+    .status-badge.weekend {
+      background-color: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
+    /* ==========================================================================
+       GOOGLE MATERIAL 3 SNACKBAR
+       ========================================================================== */
+    .m3-snackbar {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 100;
+      min-height: 48px;
+      max-width: calc(100vw - 48px);
+      padding: 12px 18px;
+      border-radius: var(--shape-xs);
+      background-color: #303030;
+      color: #f2f2f2;
+      font-size: 0.85rem;
+      font-weight: 400;
+      box-shadow: var(--elev-2);
+      display: flex;
+      align-items: center;
+      opacity: 0;
+      transform: translateY(16px);
+      pointer-events: none;
+      transition: opacity 0.2s var(--ease-standard), transform 0.2s var(--ease-standard);
+    }
+
+    [data-theme="dark"] .m3-snackbar {
+      background-color: #e3e3e3;
+      color: #1f1f1f;
+    }
+
+    .m3-snackbar.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ==========================================================================
+       RESPONSIVE BREAKPOINTS
+       ========================================================================== */
+    @media (max-width: 1120px) {
+      .workspace {
+        grid-template-columns: 1fr;
+        padding: 12px 16px 40px;
+      }
+
+      .param-sheet {
+        position: static;
+      }
+
+      .scorecard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app-bar {
+        padding: 0 16px;
+        height: 60px;
+      }
+
+      .brand-title {
+        font-size: 1rem;
+      }
+
+      .m3-btn-filled {
+        padding: 0 14px;
+        font-size: 0.8125rem;
+      }
+
+      .workspace {
+        padding: 10px 12px 32px;
+        gap: 14px;
+      }
+
+      .param-sheet {
+        padding: 16px;
+        border-radius: var(--shape-md);
+      }
+
+      .scorecard {
+        padding: 14px;
+      }
+
+      .scorecard-value {
+        font-size: 1.25rem;
+      }
+
+      .range-drawer.open {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .range-drawer.open button {
+        grid-column: span 2;
+      }
+
+      .m3-search-pill input {
+        width: 130px;
+      }
+
+      .m3-snackbar {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        max-width: none;
+      }
+    }
+
+    /* ==========================================================================
+       A4 LANDSCAPE PRINT STYLESHEET
+       ========================================================================== */
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 10mm;
+      }
+
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11px;
+      }
+
+      .app-bar,
+      .param-sheet,
+      .scorecard-grid,
+      .sheet-toolbar,
+      .sheet-subbar,
+      .m3-snackbar {
+        display: none !important;
+      }
+
+      .workspace {
+        display: block !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+
+      .workspace-sheet {
+        border: none !important;
+        box-shadow: none !important;
+      }
+
+      .print-header {
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 1.5px solid #000000;
+      }
+
+      .print-header h1 {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .print-header p {
+        font-size: 11px;
+        color: #333333;
+      }
+
+      .table-viewport {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+
+      table.m3-table {
+        font-size: 10px;
+      }
+
+      table.m3-table th,
+      table.m3-table td {
+        position: static !important;
+        border: 1px solid #888888 !important;
+        padding: 4px 6px !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+      }
+
+      table.m3-table thead th {
+        background: #f0f0f0 !important;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<header>
-  <h1>📅 Công cụ tính lịch hẹn bệnh nhân</h1>
-  <p>by Bác sĩ Phạm Văn Thái</p>
-</header>
-
-<div class="app">
-  <aside class="form">
-    <h2>Nhập liệu</h2>
-
-    <label for="A">A — Tổng số bệnh nhân</label>
-    <input type="number" id="A" min="1" value="100" autocomplete="off">
-
-    <fieldset>
-      <legend>Tính theo</legend>
-      <label><input type="radio" name="mode" value="B" checked> Nhập B</label>
-      <label><input type="radio" name="mode" value="C"> Nhập C</label>
-    </fieldset>
-
-    <label for="B">B — Số BN mỗi nhóm</label>
-    <input type="number" id="B" min="1" value="10" autocomplete="off">
-
-    <label for="C">C — Số nhóm</label>
-    <input type="number" id="C" min="1" value="10" readonly autocomplete="off">
-
-    <label for="startDate">Ngày bắt đầu</label>
-    <input type="date" id="startDate" autocomplete="off">
-
-    <label for="years">Số năm</label>
-    <input type="number" id="years" min="1" max="20" value="1" autocomplete="off">
-
-    <label for="holidays">Ngày nghỉ nhập tay</label>
-    <textarea id="holidays" rows="7" placeholder="01/01/2026&#10;30/04/2026 - 04/05/2026&#10;02/09/2026" autocomplete="off"></textarea>
-    <div class="hint">
-      Mỗi dòng 1 mục:<br>
-      • 1 ngày: <code>dd/mm/yyyy</code><br>
-      • Khoảng: <code>dd/mm/yyyy - dd/mm/yyyy</code><br>
-      Khoảng ≤ 366 ngày · Trùng tự loại bỏ
+  <!-- GOOGLE TOP APP BAR -->
+  <header class="app-bar" id="appBar">
+    <div class="brand">
+      <div class="app-emblem" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      </div>
+      <div class="brand-copy">
+        <h1 class="brand-title">Công cụ tính lịch hẹn bệnh nhân</h1>
+        <div class="brand-subtitle">bởi Bác sĩ Phạm Văn Thái</div>
+      </div>
     </div>
 
-    <button type="button" id="previewBtn">🔄 Xem trước</button>
-    <button type="button" id="exportBtn" disabled>📥 Xuất Excel</button>
-    <button type="button" id="resetBtn">↺ Đặt lại</button>
-  </aside>
+    <div class="app-actions">
+      <button type="button" class="m3-icon-btn" id="themeToggleBtn" aria-label="Chuyển giao diện sáng - tối" title="Chuyển giao diện sáng - tối">
+        <svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+      </button>
 
-  <main class="preview">
-    <h2>Kết quả</h2>
-    <div id="warnings"></div>
-    <div id="stats"></div>
-
-    <div class="tabs-row no-print">
-      <div id="tabs" class="tabs"></div>
-      <button type="button" id="printBtn" disabled>🖨 In năm này</button>
+      <button type="button" class="m3-btn m3-btn-filled" id="exportExcelBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Xuất Excel (.xlsx)</span>
+      </button>
     </div>
+  </header>
 
-    <div class="print-header">
-      <h2>LỊCH HẸN BỆNH NHÂN — <span id="printYearLabel"></span></h2>
-      <p class="by-line">by Bác sĩ Phạm Văn Thái</p>
-      <p class="meta" id="printMeta"></p>
-    </div>
+  <!-- TWO-PANE MATERIAL 3 WORKSPACE -->
+  <main class="workspace">
+    <!-- LEFT TONAL PARAMETER SHEET -->
+    <aside class="param-sheet" aria-label="Thông số xếp lịch">
+      <div class="sheet-head">
+        <span class="sheet-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          <span>Thông số xếp lịch</span>
+        </span>
+        <button type="button" class="m3-text-btn muted" id="resetBtn">Đặt lại</button>
+      </div>
 
-    <div id="previewTable"></div>
+      <!-- A -->
+      <div class="m3-field">
+        <div class="m3-field-header">
+          <label class="m3-label" for="inputA">A - Tổng số bệnh nhân đang quản lý hay cần xếp lịch</label>
+        </div>
+        <div class="m3-input-box">
+          <input type="number" id="inputA" class="m3-input" min="1" max="100000" value="1300" />
+          <span class="m3-unit">BN</span>
+        </div>
+      </div>
+
+      <!-- B -->
+      <div class="m3-field">
+        <div class="m3-field-header">
+          <label class="m3-label" for="inputB">B - Mỗi ngày sẽ có bao nhiêu bệnh nhân?</label>
+        </div>
+        <div class="m3-input-box">
+          <input type="number" id="inputB" class="m3-input" min="1" max="100000" value="50" />
+          <span class="m3-unit">BN/ngày</span>
+        </div>
+      </div>
+
+      <!-- C -->
+      <div class="m3-field">
+        <div class="m3-field-header">
+          <label class="m3-label" for="inputC">C - Chia số bệnh nhân thành bao nhiêu nhóm?</label>
+        </div>
+        <div class="m3-input-box">
+          <input type="number" id="inputC" class="m3-input" min="1" max="100000" value="26" />
+          <span class="m3-unit">nhóm</span>
+        </div>
+      </div>
+
+      <div class="m3-divider"></div>
+
+      <!-- Start Date -->
+      <div class="m3-field">
+        <div class="m3-field-header">
+          <label class="m3-label" for="inputStartDate">Bắt đầu xếp lịch từ ngày nào?</label>
+        </div>
+        <div class="m3-input-box">
+          <input type="date" id="inputStartDate" class="m3-input" />
+        </div>
+      </div>
+
+      <!-- End Date -->
+      <div class="m3-field">
+        <div class="m3-field-header">
+          <label class="m3-label" for="inputEndDate">Kết thúc xếp lịch vào ngày nào?</label>
+        </div>
+        <div class="m3-input-box">
+          <input type="date" id="inputEndDate" class="m3-input" />
+        </div>
+      </div>
+
+      <!-- Holidays -->
+      <div class="m3-field">
+        <div class="m3-field-header">
+          <label class="m3-label" for="inputHolidays">Nhập ngày nghỉ cần bỏ qua khi xếp lịch</label>
+          <div class="m3-field-actions">
+            <button type="button" class="m3-text-btn" id="toggleRangePickerBtn">+ Chọn lịch</button>
+            <button type="button" class="m3-text-btn muted" id="clearHolidaysBtn">Xóa</button>
+          </div>
+        </div>
+
+        <div class="range-drawer" id="rangeDrawer">
+          <input type="date" id="pickStart" class="m3-input" title="Từ ngày" />
+          <input type="date" id="pickEnd" class="m3-input" title="Đến ngày" />
+          <button type="button" class="m3-btn m3-btn-filled" style="height:36px;padding:0 14px;font-size:0.8rem;" id="addRangeBtn">Thêm</button>
+        </div>
+
+        <div class="m3-input-box">
+          <textarea
+            id="inputHolidays"
+            class="m3-input"
+            placeholder="Ví dụ:&#10;30/04/2027 - 01/05/2027&#10;02/09/2027"
+          ></textarea>
+        </div>
+
+        <div class="chip-cloud" id="holidayChips" aria-label="Danh sách ngày nghỉ đã nhận diện"></div>
+      </div>
+    </aside>
+
+    <!-- RIGHT WORKSPACE CANVAS -->
+    <section class="canvas-stack" aria-label="Kết quả tính lịch hẹn">
+      <!-- 4 Google Analytics-style Scorecards -->
+      <div class="scorecard-grid">
+        <div class="scorecard">
+          <div class="scorecard-label">Tổng số nhóm thực tế (C')</div>
+          <div class="scorecard-value" id="statCPrime">26 nhóm</div>
+          <div class="scorecard-meta" id="statGroupSub">1300 BN • 50 BN/ngày</div>
+        </div>
+
+        <div class="scorecard">
+          <div class="scorecard-label">Số lần hẹn tối đa / nhóm (K)</div>
+          <div class="scorecard-value" id="statMaxK">10 lần</div>
+          <div class="scorecard-meta" id="statAvgGap">Giãn cách TB: ~36.4 ngày lịch</div>
+        </div>
+
+        <div class="scorecard">
+          <div class="scorecard-label">Tổng ngày khám xếp lịch</div>
+          <div class="scorecard-value" id="statWorkDays">261 ngày</div>
+          <div class="scorecard-meta" id="statDateRange">17/11/2026 – 17/11/2027</div>
+        </div>
+
+        <div class="scorecard">
+          <div class="scorecard-label">Ngày nghỉ đã bỏ qua</div>
+          <div class="scorecard-value" id="statSkippedHolidays">0 ngày</div>
+          <div class="scorecard-meta" id="statSkippedWeekends">+ 104 ngày T7/CN bỏ qua</div>
+        </div>
+      </div>
+
+      <!-- Main Elevated Sheet -->
+      <div class="workspace-sheet">
+        <div class="sheet-toolbar">
+          <nav class="m3-tabs" role="tablist" aria-label="Chế độ xem kết quả">
+            <button type="button" class="m3-tab active" role="tab" aria-selected="true" id="tabSchedule">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="3" y1="15" x2="21" y2="15"></line>
+                <line x1="9" y1="9" x2="9" y2="21"></line>
+              </svg>
+              <span>Bảng lịch hẹn</span>
+            </button>
+            <button type="button" class="m3-tab" role="tab" aria-selected="false" id="tabReport">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              <span>Báo cáo</span>
+            </button>
+          </nav>
+
+          <div class="toolbar-right">
+            <div class="m3-search-pill" id="searchBoxWrap" title="Nhập số thứ tự bệnh nhân (ví dụ: 425) để tìm nhóm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="lookupInput" placeholder="Tra cứu STT bệnh nhân..." autocomplete="off" />
+            </div>
+
+            <button type="button" class="m3-btn m3-btn-tonal" id="printBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+              </svg>
+              <span>In bảng lịch hẹn</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="sheet-subbar">
+          <span id="captionLeft"></span>
+          <span id="captionRight"></span>
+        </div>
+
+        <div id="viewHost"></div>
+        <div id="printHost" style="display: none;"></div>
+      </div>
+    </section>
   </main>
-</div>
 
-<script>
-'use strict';
+  <div class="m3-snackbar" id="snackbar" role="status" aria-live="polite"></div>
 
-// ================= UTILS =================
-const pad = n => n < 10 ? '0' + n : '' + n;
-const fmtDate = d => pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear();
-const fmtDateISO = d => d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
-const dayName = d => ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
-const isWeekend = d => d.getDay() === 0 || d.getDay() === 6;
-const daysBetween = (a, b) => Math.round((b - a) / 86400000);
+  <script>
+    /* ==========================================================================
+       1. EXECUTIVE-GRADE PURE-JS OOXML (.XLSX) GENERATOR
+       Single unified sheet with KPI scorecards, two-tier grouped headers,
+       live formulas, AutoFilter, frozen panes, and A4 landscape page setup.
+       ========================================================================== */
+    const PureXlsxBuilder = (() => {
+      const crcTable = new Uint32Array(256);
+      for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let k = 0; k < 8; k++) {
+          c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+        crcTable[i] = c >>> 0;
+      }
 
-function parseVN(s) {
-  const m = s.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!m) return null;
-  const dd = +m[1], mm = +m[2], yy = +m[3];
-  const d = new Date(yy, mm - 1, dd);
-  if (d.getDate() !== dd || d.getMonth() !== mm - 1 || d.getFullYear() !== yy) return null;
-  return d;
-}
+      function crc32(bytes) {
+        let crc = 0xffffffff;
+        for (let i = 0; i < bytes.length; i++) {
+          crc = crcTable[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+        }
+        return (crc ^ 0xffffffff) >>> 0;
+      }
 
-// ================= HOLIDAYS =================
-function parseHolidaysText(text) {
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  const dates = [], errors = [], seen = new Set();
-  const addDate = d => { const k = fmtDate(d); if (seen.has(k)) return; seen.add(k); dates.push(d); };
-  lines.forEach((line, i) => {
-    const rangeMatch = line.match(/^(\d{1,2}\/\d{1,2}\/\d{4})\s*[-–—]\s*(\d{1,2}\/\d{1,2}\/\d{4})$/);
-    if (rangeMatch) {
-      const from = parseVN(rangeMatch[1]), to = parseVN(rangeMatch[2]);
-      if (!from) { errors.push(`Dòng ${i+1} "${line}": ngày bắt đầu không hợp lệ.`); return; }
-      if (!to)   { errors.push(`Dòng ${i+1} "${line}": ngày kết thúc không hợp lệ.`); return; }
-      if (from > to) { errors.push(`Dòng ${i+1} "${line}": ngày bắt đầu > ngày kết thúc.`); return; }
-      const span = daysBetween(from, to) + 1;
-      if (span > 366) { errors.push(`Dòng ${i+1} "${line}": khoảng quá dài (${span} ngày, tối đa 366).`); return; }
-      for (let k = 0; k < span; k++) addDate(new Date(from.getFullYear(), from.getMonth(), from.getDate() + k));
-      return;
+      function escXml(val) {
+        if (val === null || val === undefined) return "";
+        return String(val)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
+      }
+
+      function colLetter(idx) {
+        let n = idx + 1;
+        let out = "";
+        while (n > 0) {
+          const rem = (n - 1) % 26;
+          out = String.fromCharCode(65 + rem) + out;
+          n = Math.floor((n - rem - 1) / 26);
+        }
+        return out;
+      }
+
+      function safeSheetName(name) {
+        return String(name).replace(/[\\\/\?\*\[\]\:]/g, "-").slice(0, 31) || "Sheet";
+      }
+
+      function buildWorkbook(sheets) {
+        const encoder = new TextEncoder();
+        const files = [];
+        const add = (path, xml) => files.push({ path, data: encoder.encode(xml) });
+
+        let ct = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>`;
+        sheets.forEach((_, i) => {
+          ct += `\n  <Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`;
+        });
+        ct += `\n</Types>`;
+        add("[Content_Types].xml", ct);
+
+        add("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`);
+
+        let wb = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>`;
+        let wbRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`;
+
+        sheets.forEach((s, i) => {
+          wb += `\n    <sheet name="${escXml(safeSheetName(s.name))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`;
+          wbRels += `\n  <Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`;
+        });
+        wb += `\n  </sheets>\n</workbook>`;
+        wbRels += `\n  <Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>\n</Relationships>`;
+
+        add("xl/workbook.xml", wb);
+        add("xl/_rels/workbook.xml.rels", wbRels);
+
+        const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <numFmts count="2">
+    <numFmt numFmtId="164" formatCode="0&quot; ngày&quot;"/>
+    <numFmt numFmtId="165" formatCode="#,##0"/>
+  </numFmts>
+  <fonts count="12">
+    <font><sz val="10"/><color rgb="FF1F1F1F"/><name val="Calibri"/></font>
+    <font><b/><sz val="13"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+    <font><i/><sz val="10"/><color rgb="FF444746"/><name val="Calibri"/></font>
+    <font><b/><sz val="9"/><color rgb="FF444746"/><name val="Calibri"/></font>
+    <font><b/><sz val="11"/><color rgb="FF0B57D0"/><name val="Calibri"/></font>
+    <font><b/><sz val="11"/><color rgb="FF8F4E00"/><name val="Calibri"/></font>
+    <font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+    <font><b/><sz val="9.5"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+    <font><b/><sz val="10"/><color rgb="FF0B57D0"/><name val="Calibri"/></font>
+    <font><b/><sz val="10"/><color rgb="FF8F4E00"/><name val="Calibri"/></font>
+    <font><sz val="9.5"/><color rgb="FF5F6368"/><name val="Calibri"/></font>
+    <font><sz val="9.5"/><color rgb="FF8F4E00"/><name val="Calibri"/></font>
+  </fonts>
+  <fills count="11">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF0B57D0"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFE9EEF6"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF0F4F9"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFFFFF"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFDF9E"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF1B6EF3"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFD3E3FD"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF8FAFD"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFF6E0"/><bgColor indexed="64"/></patternFill></fill>
+  </fills>
+  <borders count="5">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border>
+      <left style="thin"><color rgb="FFC4C7C5"/></left>
+      <right style="thin"><color rgb="FFC4C7C5"/></right>
+      <top style="thin"><color rgb="FFC4C7C5"/></top>
+      <bottom style="thin"><color rgb="FFC4C7C5"/></bottom>
+      <diagonal/>
+    </border>
+    <border>
+      <left style="thin"><color rgb="FF747775"/></left>
+      <right style="thin"><color rgb="FF747775"/></right>
+      <top style="medium"><color rgb="FF0B57D0"/></top>
+      <bottom style="thin"><color rgb="FF747775"/></bottom>
+      <diagonal/>
+    </border>
+    <border>
+      <left style="thin"><color rgb="FFC4C7C5"/></left>
+      <right style="thin"><color rgb="FFC4C7C5"/></right>
+      <top style="medium"><color rgb="FF0B57D0"/></top>
+      <bottom style="medium"><color rgb="FF0B57D0"/></bottom>
+      <diagonal/>
+    </border>
+    <border>
+      <left/><right/><top/>
+      <bottom style="medium"><color rgb="FFC4C7C5"/></bottom>
+      <diagonal/>
+    </border>
+  </borders>
+  <cellStyleXfs count="1">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  </cellStyleXfs>
+  <cellStyles count="1">
+    <cellStyle name="Normal" xfId="0" builtinId="0"/>
+  </cellStyles>
+  <cellXfs count="19">
+    <xf numFmtId="0" fontId="0" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="left" vertical="center" indent="1"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="3" borderId="4" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center" indent="1"/></xf>
+    <xf numFmtId="0" fontId="3" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="4" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="5" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="6" fillId="2" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="7" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="8" fillId="8" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="9" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="9" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="164" fontId="10" fillId="5" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="164" fontId="10" fillId="9" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="164" fontId="11" fillId="10" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="10" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="4" fillId="3" borderId="3" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="0" fillId="8" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+  </cellXfs>
+</styleSheet>`;
+        add("xl/styles.xml", styles);
+
+        sheets.forEach((sheet, idx) => {
+          let xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>`;
+
+          if (sheet.freezeRow && sheet.freezeCol) {
+            const topLeft = `${colLetter(sheet.freezeCol)}${sheet.freezeRow + 1}`;
+            xml += `\n  <sheetViews><sheetView showGridLines="1" tabSelected="${idx === 0 ? 1 : 0}" workbookViewId="0"><pane xSplit="${sheet.freezeCol}" ySplit="${sheet.freezeRow}" topLeftCell="${topLeft}" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>`;
+          } else {
+            xml += `\n  <sheetViews><sheetView showGridLines="1" tabSelected="${idx === 0 ? 1 : 0}" workbookViewId="0"/></sheetViews>`;
+          }
+
+          if (sheet.colWidths && sheet.colWidths.length) {
+            xml += `\n  <cols>`;
+            sheet.colWidths.forEach((w, cIdx) => {
+              xml += `\n    <col min="${cIdx + 1}" max="${cIdx + 1}" width="${w}" customWidth="1"/>`;
+            });
+            xml += `\n  </cols>`;
+          }
+
+          xml += `\n  <sheetData>`;
+          sheet.rows.forEach((rowObj, rIdx) => {
+            const rNum = rIdx + 1;
+            const cells = Array.isArray(rowObj) ? rowObj : rowObj.cells;
+            const customHt = !Array.isArray(rowObj) && rowObj.ht ? rowObj.ht : 21;
+            xml += `\n    <row r="${rNum}" ht="${customHt}" customHeight="1">`;
+            cells.forEach((cell, cIdx) => {
+              if (!cell) return;
+              const ref = `${colLetter(cIdx)}${rNum}`;
+              const sAttr = cell.s !== undefined ? ` s="${cell.s}"` : ` s="0"`;
+              if (cell.f) {
+                xml += `<c r="${ref}"${sAttr}><f>${escXml(cell.f)}</f></c>`;
+              } else if (cell.v === "" || cell.v === null || cell.v === undefined) {
+                if (cell.s !== undefined) {
+                  xml += `<c r="${ref}"${sAttr}/>`;
+                }
+              } else if (typeof cell.v === "number" && !Number.isNaN(cell.v)) {
+                xml += `<c r="${ref}"${sAttr}><v>${cell.v}</v></c>`;
+              } else {
+                xml += `<c r="${ref}"${sAttr} t="inlineStr"><is><t>${escXml(cell.v)}</t></is></c>`;
+              }
+            });
+            xml += `</row>`;
+          });
+          xml += `\n  </sheetData>`;
+
+          if (sheet.autoFilter) {
+            xml += `\n  <autoFilter ref="${sheet.autoFilter}"/>`;
+          }
+
+          if (sheet.merges && sheet.merges.length) {
+            xml += `\n  <mergeCells count="${sheet.merges.length}">`;
+            sheet.merges.forEach((m) => {
+              xml += `\n    <mergeCell ref="${m}"/>`;
+            });
+            xml += `\n  </mergeCells>`;
+          }
+
+          xml += `\n  <pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.25" footer="0.25"/>`;
+          xml += `\n  <pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>`;
+          xml += `\n</worksheet>`;
+          add(`xl/worksheets/sheet${idx + 1}.xml`, xml);
+        });
+
+        const localParts = [];
+        const centralParts = [];
+        let offset = 0;
+
+        const now = new Date();
+        const dosTime = ((now.getHours() & 0x1f) << 11) | ((now.getMinutes() & 0x3f) << 5) | ((now.getSeconds() >> 1) & 0x1f);
+        const dosDate = (((now.getFullYear() - 1980) & 0x7f) << 9) | (((now.getMonth() + 1) & 0x0f) << 5) | (now.getDate() & 0x1f);
+
+        files.forEach((f) => {
+          const nameBytes = encoder.encode(f.path);
+          const dataBytes = f.data;
+          const fileCrc = crc32(dataBytes);
+          const size = dataBytes.length;
+
+          const lHeader = new Uint8Array(30 + nameBytes.length);
+          const lView = new DataView(lHeader.buffer);
+          lView.setUint32(0, 0x04034b50, true);
+          lView.setUint16(4, 20, true);
+          lView.setUint16(6, 0x0800, true);
+          lView.setUint16(8, 0, true);
+          lView.setUint16(10, dosTime, true);
+          lView.setUint16(12, dosDate, true);
+          lView.setUint32(14, fileCrc, true);
+          lView.setUint32(18, size, true);
+          lView.setUint32(22, size, true);
+          lView.setUint16(26, nameBytes.length, true);
+          lView.setUint16(28, 0, true);
+          lHeader.set(nameBytes, 30);
+
+          localParts.push(lHeader, dataBytes);
+
+          const cHeader = new Uint8Array(46 + nameBytes.length);
+          const cView = new DataView(cHeader.buffer);
+          cView.setUint32(0, 0x02014b50, true);
+          cView.setUint16(4, 20, true);
+          cView.setUint16(6, 20, true);
+          cView.setUint16(8, 0x0800, true);
+          cView.setUint16(10, 0, true);
+          cView.setUint16(12, dosTime, true);
+          cView.setUint16(14, dosDate, true);
+          cView.setUint32(16, fileCrc, true);
+          cView.setUint32(20, size, true);
+          cView.setUint32(24, size, true);
+          cView.setUint16(28, nameBytes.length, true);
+          cView.setUint16(30, 0, true);
+          cView.setUint16(32, 0, true);
+          cView.setUint16(34, 0, true);
+          cView.setUint16(36, 0, true);
+          cView.setUint32(38, 0, true);
+          cView.setUint32(42, offset, true);
+          cHeader.set(nameBytes, 46);
+
+          centralParts.push(cHeader);
+          offset += lHeader.length + dataBytes.length;
+        });
+
+        const centralStart = offset;
+        let centralSize = 0;
+        centralParts.forEach((p) => (centralSize += p.length));
+
+        const eocd = new Uint8Array(22);
+        const eView = new DataView(eocd.buffer);
+        eView.setUint32(0, 0x06054b50, true);
+        eView.setUint16(4, 0, true);
+        eView.setUint16(6, 0, true);
+        eView.setUint16(8, files.length, true);
+        eView.setUint16(10, files.length, true);
+        eView.setUint32(12, centralSize, true);
+        eView.setUint32(16, centralStart, true);
+        eView.setUint16(20, 0, true);
+
+        const out = new Uint8Array(offset + centralSize + 22);
+        let pos = 0;
+        localParts.forEach((p) => { out.set(p, pos); pos += p.length; });
+        centralParts.forEach((p) => { out.set(p, pos); pos += p.length; });
+        out.set(eocd, pos);
+        return out;
+      }
+
+      function downloadXlsx(filename, sheets) {
+        const safeName = filename.endsWith(".xlsx") ? filename : `${filename}.xlsx`;
+        const bytes = buildWorkbook(sheets);
+        const blob = new Blob([bytes], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = safeName;
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 1500);
+      }
+
+      return { colLetter, buildWorkbook, downloadXlsx };
+    })();
+
+    /* ==========================================================================
+       2. STATE, STORAGE & DATE HELPERS
+       ========================================================================== */
+    const STORAGE_KEYS = {
+      THEME: "pvt_appt_theme_m3",
+      HOLIDAYS: "pvt_appt_holidays_m3",
+      CONFIG: "pvt_appt_config_m3"
+    };
+
+    const WEEKDAYS_VI = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+
+    const state = {
+      A: 1300,
+      B: 50,
+      C: 26,
+      driver: "B",
+      startDateStr: "",
+      endDateStr: "",
+      holidaysText: "",
+      activeTab: "schedule",
+      lookupQuery: "",
+      computed: null
+    };
+
+    function toIso(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
-    const d = parseVN(line);
-    if (!d) { errors.push(`Dòng ${i+1} "${line}": sai định dạng.`); return; }
-    addDate(d);
-  });
-  return { dates, errors };
-}
 
-// ================= CORE =================
-function buildGroups(A, B) {
-  const C = Math.ceil(A / B);
-  const groups = new Array(C);
-  for (let i = 0; i < C; i++) {
-    const start = i * B + 1;
-    const end = Math.min((i + 1) * B, A);
-    groups[i] = { index: i, start, end, size: end - start + 1, label: `${start}–${end}` };
-  }
-  return groups;
-}
-
-function adjustToWorkingDay(date, holidaySet) {
-  let d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  let guard = 0;
-  while ((isWeekend(d) || holidaySet.has(fmtDate(d))) && guard++ < 3660) d.setDate(d.getDate() + 1);
-  return d;
-}
-
-function generateSchedule(groups, startDate, numYears, manualHolidays) {
-  const holidaySet = new Set(manualHolidays.map(fmtDate));
-  const C = groups.length;
-  const adjustedStart = adjustToWorkingDay(startDate, holidaySet);
-  const firstYear = adjustedStart.getFullYear();
-  const endDate = new Date(firstYear + numYears - 1, 11, 31);
-  const schedule = [];
-  let pointer = 0;
-  let d = new Date(adjustedStart);
-  while (d <= endDate) {
-    if (!isWeekend(d) && !holidaySet.has(fmtDate(d))) {
-      schedule.push({ date: new Date(d), groupIdx: pointer });
-      pointer = (pointer + 1) % C;
+    function toVNDate(d) {
+      return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
     }
-    d.setDate(d.getDate() + 1);
-  }
-  return { schedule, adjustedStart, holidaySet, endDate, firstYear };
-}
 
-function buildYearMatrices(groups, schedule, firstYear, numYears) {
-  const byYear = new Map();
-  for (let y = firstYear; y < firstYear + numYears; y++) byYear.set(y, groups.map(() => []));
-  for (const s of schedule) {
-    const arr = byYear.get(s.date.getFullYear());
-    if (arr) arr[s.groupIdx].push(s.date);
-  }
-  const result = [];
-  for (let y = firstYear; y < firstYear + numYears; y++) {
-    const byGroup = byYear.get(y);
-    const rows = groups.map((g, i) => {
-      const dates = byGroup[i];
-      const kcs = new Array(Math.max(0, dates.length - 1));
-      for (let k = 0; k < kcs.length; k++) kcs[k] = daysBetween(dates[k], dates[k + 1]);
-      return { label: g.label, size: g.size, dates, kcs };
-    });
-    let maxK = 0, count = 0;
-    for (const r of rows) { if (r.dates.length > maxK) maxK = r.dates.length; count += r.dates.length; }
-    result.push({ rows, maxK, year: y, count });
-  }
-  return result;
-}
-
-// ================= STATE =================
-let state = null;
-
-function collectInputs() {
-  const A = parseInt(document.getElementById('A').value, 10);
-  const mode = document.querySelector('input[name="mode"]:checked').value;
-  const Braw = parseInt(document.getElementById('B').value, 10);
-  const Craw = parseInt(document.getElementById('C').value, 10);
-  const startStr = document.getElementById('startDate').value;
-  const years = parseInt(document.getElementById('years').value, 10);
-  const holText = document.getElementById('holidays').value;
-  const errors = [];
-  if (!A || A < 1) errors.push('A phải ≥ 1.');
-  if (!years || years < 1) errors.push('Số năm phải ≥ 1.');
-  if (years > 20) errors.push('Số năm tối đa là 20.');
-  if (!startStr) errors.push('Chưa chọn ngày bắt đầu.');
-  let B, C;
-  if (mode === 'B') {
-    B = Braw;
-    if (!B || B < 1) errors.push('B phải ≥ 1.');
-    else if (B > A) errors.push('B không được lớn hơn A.');
-    else C = Math.ceil(A / B);
-  } else {
-    C = Craw;
-    if (!C || C < 1) errors.push('C phải ≥ 1.');
-    else if (C > A) errors.push('C không được lớn hơn A.');
-    else B = Math.ceil(A / C);
-  }
-  let startDate = null;
-  if (startStr) {
-    const parts = startStr.split('-').map(Number);
-    if (parts.length === 3 && parts.every(n => !isNaN(n))) {
-      startDate = new Date(parts[0], parts[1] - 1, parts[2]);
-      if (isNaN(startDate.getTime())) { errors.push('Ngày bắt đầu không hợp lệ.'); startDate = null; }
-    } else errors.push('Ngày bắt đầu không hợp lệ.');
-  }
-  const hol = parseHolidaysText(holText);
-  if (hol.errors.length) errors.push(...hol.errors);
-  return { A, mode, B, C, startDate, years, manualHolidays: hol.dates, errors };
-}
-
-function computeState(input) {
-  if (input.errors.length) return null;
-  const groups = buildGroups(input.A, input.B);
-  const actualC = groups.length;
-  const warnings = [];
-  let cAdjusted = null;
-  if (input.mode === 'C' && actualC !== input.C) {
-    cAdjusted = { requested: input.C, actual: actualC, B: input.B };
-    warnings.push({
-      type: 'warn', title: 'Số nhóm đã được điều chỉnh',
-      text: `Bạn nhập C = ${input.C}. Hệ thống tính B = ⌈${input.A}/${input.C}⌉ = ${input.B}, dẫn đến số nhóm thực tế C' = ⌈${input.A}/${input.B}⌉ = ${actualC}. Đã tự động dùng C' = ${actualC}.`
-    });
-  }
-  const gen = generateSchedule(groups, input.startDate, input.years, input.manualHolidays);
-  if (fmtDate(gen.adjustedStart) !== fmtDate(input.startDate)) {
-    warnings.push({
-      type: 'warn', title: 'Ngày bắt đầu đã được điều chỉnh',
-      text: `Ngày ${fmtDate(input.startDate)} là ngày nghỉ. Lịch bắt đầu từ ${fmtDate(gen.adjustedStart)} (${dayName(gen.adjustedStart)}).`
-    });
-  }
-  const finalGroup = groups[groups.length - 1];
-  if (finalGroup.size < input.B) {
-    warnings.push({
-      type: 'warn', title: 'Nhóm cuối không đủ BN',
-      text: `Nhóm cuối "${finalGroup.label}" chỉ có ${finalGroup.size} BN (thiếu ${input.B - finalGroup.size}).`
-    });
-  }
-  if (gen.schedule.length < actualC) {
-    warnings.push({
-      type: 'error', title: 'Không đủ ngày làm việc',
-      text: `Chỉ có ${gen.schedule.length} ngày làm việc, ít hơn số nhóm (${actualC}).`
-    });
-  }
-  const yearsData = buildYearMatrices(groups, gen.schedule, gen.firstYear, input.years);
-  const appliedHolidays = [];
-  let d = new Date(gen.adjustedStart);
-  while (d <= gen.endDate) {
-    if (isWeekend(d)) appliedHolidays.push({ date: new Date(d), reason: 'Cuối tuần (T7/CN)' });
-    else if (gen.holidaySet.has(fmtDate(d))) appliedHolidays.push({ date: new Date(d), reason: 'Ngày lễ (nhập tay)' });
-    d.setDate(d.getDate() + 1);
-  }
-  let totalWeekend = 0, totalManual = 0;
-  for (const h of appliedHolidays) {
-    if (h.reason.charCodeAt(0) === 67) totalWeekend++; else totalManual++;
-  }
-  return {
-    input, groups, actualC, cAdjusted, gen, warnings, yearsData,
-    appliedHolidays, totalWeekend, totalManual,
-    totalWorkingDays: gen.schedule.length,
-    fullCycles: Math.floor(gen.schedule.length / actualC),
-    yearHtmlCache: new Map()
-  };
-}
-
-// ================= RENDER (web) =================
-function renderWarnings(warnings, extraNotice) {
-  const el = document.getElementById('warnings');
-  let html = warnings.map(w => `<div class="warn ${w.type === 'error' ? 'error' : ''}"><strong>⚠ ${w.title}</strong>${w.text}</div>`).join('');
-  if (extraNotice) html = extraNotice + html;
-  el.innerHTML = html;
-}
-
-function renderStats(st) {
-  document.getElementById('stats').innerHTML = `
-    <div class="stats">
-      <div class="stat"><div class="stat-label">Số nhóm (C)</div><div class="stat-value">${st.actualC}</div></div>
-      <div class="stat"><div class="stat-label">BN / nhóm</div><div class="stat-value">${st.input.B}</div></div>
-      <div class="stat"><div class="stat-label">Tổng ngày làm việc</div><div class="stat-value">${st.totalWorkingDays}</div></div>
-      <div class="stat"><div class="stat-label">Số vòng hoàn chỉnh</div><div class="stat-value">${st.fullCycles}</div></div>
-      <div class="stat"><div class="stat-label">Ngày bắt đầu</div><div class="stat-value">${fmtDate(st.gen.adjustedStart)}</div></div>
-      <div class="stat"><div class="stat-label">Ngày kết thúc</div><div class="stat-value">${fmtDate(st.gen.endDate)}</div></div>
-      <div class="stat"><div class="stat-label">T7/CN bỏ qua</div><div class="stat-value">${st.totalWeekend}</div></div>
-      <div class="stat"><div class="stat-label">Lễ nhập tay bỏ qua</div><div class="stat-value">${st.totalManual}</div></div>
-    </div>`;
-}
-
-function renderTabs(yearsData) {
-  const el = document.getElementById('tabs');
-  el.innerHTML = yearsData.map((y, i) => `<button type="button" class="tab ${i === 0 ? 'active' : ''}" data-year="${y.year}">Năm ${y.year}<span class="count">(${y.count})</span></button>`).join('');
-  el.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
-    el.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    const year = +t.dataset.year;
-    renderYearTable(yearsData, year);
-    updatePrintHeader(year);
-  }));
-}
-
-function renderYearTable(yearsData, year) {
-  const data = yearsData.find(y => y.year === year);
-  if (!data) return;
-  const el = document.getElementById('previewTable');
-  if (state && state.yearHtmlCache.has(year)) { el.innerHTML = state.yearHtmlCache.get(year); return; }
-  if (data.maxK === 0) {
-    const html = '<p style="text-align:center;color:#64748b;padding:20px;">Không có lịch hẹn trong năm này.</p>';
-    el.innerHTML = html; if (state) state.yearHtmlCache.set(year, html); return;
-  }
-  const maxCols = Math.min(data.maxK, 10);
-  let head = '<tr><th>Nhóm</th>';
-  for (let k = 0; k < maxCols; k++) {
-    head += `<th>Lần ${k+1}</th>`;
-    if (k < maxCols - 1) head += `<th>KC (${k+1}→${k+2})</th>`;
-  }
-  if (data.maxK > 10) head += `<th>… (${data.maxK - 10} cột nữa)</th>`;
-  head += '</tr>';
-  let body = '';
-  for (const row of data.rows) {
-    let tr = `<tr><td class="group-cell">${row.label}</td>`;
-    for (let k = 0; k < maxCols; k++) {
-      tr += (k < row.dates.length) ? `<td class="date">${fmtDate(row.dates[k])}<br><small>${dayName(row.dates[k])}</small></td>` : '<td class="empty">—</td>';
-      if (k < maxCols - 1) tr += (k < row.kcs.length) ? `<td class="kc">${row.kcs[k]}</td>` : '<td class="empty">—</td>';
+    function getDefaultDates() {
+      const today = new Date();
+      const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const end = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+      return { startStr: toIso(start), endStr: toIso(end) };
     }
-    if (data.maxK > 10) tr += '<td class="empty">…</td>';
-    tr += '</tr>';
-    body += tr;
-  }
-  const html = `<div class="scroll-x"><table>${head}${body}</table></div>
-    <p class="notice">Hiển thị tối đa 10 cột "Lần". File Excel chứa đầy đủ ${data.maxK} cột.</p>`;
-  el.innerHTML = html;
-  if (state) state.yearHtmlCache.set(year, html);
-}
 
-function updatePrintHeader(year) {
-  document.getElementById('printYearLabel').textContent = `NĂM ${year}`;
-  if (state) {
-    document.getElementById('printMeta').textContent =
-      `A = ${state.input.A} · B = ${state.input.B} · C = ${state.actualC} · Ngày bắt đầu: ${fmtDate(state.gen.adjustedStart)} · Phạm vi: ${fmtDate(state.gen.adjustedStart)} – ${fmtDate(state.gen.endDate)}`;
-  }
-}
-
-function printCurrentYear() {
-  if (!state) return;
-  const activeTab = document.querySelector('.tab.active');
-  const year = activeTab ? +activeTab.dataset.year : state.yearsData[0].year;
-  updatePrintHeader(year);
-  window.print();
-}
-
-// ================= EXCEL STYLES =================
-const BORDER = { style: 'thin', color: { rgb: 'D1D5DB' } };
-const BORDER_ALL = { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER };
-const BORDER_SECTION = { style: 'thin', color: { rgb: '1E40AF' } };
-const BORDER_SECTION_ALL = { top: BORDER_SECTION, bottom: BORDER_SECTION, left: BORDER_SECTION, right: BORDER_SECTION };
-
-const STYLES = {
-  title: {
-    font: { bold: true, sz: 15, color: { rgb: '1E40AF' } },
-    alignment: { horizontal: 'center', vertical: 'center' }
-  },
-  subtitle: {
-    font: { italic: true, sz: 10, color: { rgb: '64748B' } },
-    alignment: { horizontal: 'center', vertical: 'center' }
-  },
-  sectionHeader: {
-    font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' } },
-    fill: { patternType: 'solid', fgColor: { rgb: '1E40AF' } },
-    alignment: { horizontal: 'left', vertical: 'center' },
-    border: BORDER_SECTION_ALL
-  },
-  label: {
-    font: { bold: true, sz: 10, color: { rgb: '334155' } },
-    alignment: { horizontal: 'left', vertical: 'center' },
-    fill: { patternType: 'solid', fgColor: { rgb: 'F8FAFC' } },
-    border: BORDER_ALL
-  },
-  value: {
-    font: { sz: 10 },
-    alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
-    border: BORDER_ALL
-  },
-  infoMerged: {
-    font: { sz: 10, color: { rgb: '334155' } },
-    alignment: { horizontal: 'left', vertical: 'center' }
-  },
-  tableHeader: {
-    font: { bold: true, sz: 10, color: { rgb: 'FFFFFF' } },
-    fill: { patternType: 'solid', fgColor: { rgb: '3B82F6' } },
-    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-    border: BORDER_ALL
-  },
-  data: {
-    font: { sz: 10 },
-    alignment: { horizontal: 'center', vertical: 'center' },
-    border: BORDER_ALL
-  },
-  dataLeft: {
-    font: { bold: true, sz: 10 },
-    alignment: { horizontal: 'left', vertical: 'center' },
-    fill: { patternType: 'solid', fgColor: { rgb: 'F8FAFC' } },
-    border: BORDER_ALL
-  },
-  dataKC: {
-    font: { sz: 10, color: { rgb: '0369A1' } },
-    alignment: { horizontal: 'center', vertical: 'center' },
-    fill: { patternType: 'solid', fgColor: { rgb: 'F0F9FF' } },
-    border: BORDER_ALL
-  }
-};
-
-function ensureCell(ws, r, c) {
-  const addr = XLSX.utils.encode_cell({ r, c });
-  if (!ws[addr]) ws[addr] = { t: 's', v: '' };
-  return addr;
-}
-
-function styleRange(ws, r1, c1, r2, c2, style) {
-  for (let r = r1; r <= r2; r++) {
-    for (let c = c1; c <= c2; c++) {
-      ws[ensureCell(ws, r, c)].s = style;
+    function parseIso(str) {
+      if (!str || !/^\d{4}-\d{2}-\d{2}$/.test(str)) return null;
+      const [y, m, d] = str.split("-").map(Number);
+      const dt = new Date(y, m - 1, d);
+      return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d ? dt : null;
     }
-  }
-}
 
-// ================= BUILD YEAR SHEET =================
-function buildYearSheet(st, yd) {
-  const colsCount = 1 + yd.maxK + Math.max(0, yd.maxK - 1);
-  const lastCol = colsCount - 1;
-
-  const rows = [];
-  const push = (type, data) => rows.push({ type, data });
-
-  // Pad a single-string row to full width for merging
-  const pad = (text) => [text, ...Array(colsCount - 1).fill('')];
-
-  push('title', pad(`LỊCH HẸN BỆNH NHÂN — NĂM ${yd.year}`));
-  push('subtitle', pad('by Bác sĩ Phạm Văn Thái'));
-  push('empty', []);
-  push('info', [`A (tổng BN) = ${st.input.A}     ·     B (BN/nhóm) = ${st.input.B}     ·     C (số nhóm) = ${st.actualC}`]);
-  push('info', [`Ngày bắt đầu hiệu lực: ${fmtDate(st.gen.adjustedStart)} (${dayName(st.gen.adjustedStart)})     ·     Số năm: ${st.input.years}`]);
-  push('info', [`Số lần/nhóm tối đa trong năm: ${yd.maxK}     ·     Tổng ngày hẹn trong năm: ${yd.count}`]);
-  push('empty', []);
-
-  // Header
-  const header = ['Nhóm'];
-  for (let k = 0; k < yd.maxK; k++) {
-    header.push(`Lần ${k+1}`);
-    if (k < yd.maxK - 1) header.push(`KC (${k+1}→${k+2})`);
-  }
-  push('header', header);
-
-  // Data
-  for (const rrow of yd.rows) {
-    const cells = [rrow.label];
-    for (let k = 0; k < yd.maxK; k++) {
-      cells.push(k < rrow.dates.length ? fmtDate(rrow.dates[k]) : '');
-      if (k < yd.maxK - 1) cells.push(k < rrow.kcs.length ? rrow.kcs[k] : '');
+    function parseFlexDate(str) {
+      const s = str.trim();
+      let m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+      if (m) {
+        const dt = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+        return dt.getFullYear() === Number(m[3]) && dt.getMonth() === Number(m[2]) - 1 && dt.getDate() === Number(m[1]) ? dt : null;
+      }
+      m = s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+      if (m) {
+        const dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        return dt.getFullYear() === Number(m[1]) && dt.getMonth() === Number(m[2]) - 1 && dt.getDate() === Number(m[3]) ? dt : null;
+      }
+      return null;
     }
-    push('datarow', cells);
-  }
 
-  const aoa = rows.map(r => r.data);
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
+    function parseHolidays(raw) {
+      const map = new Map();
+      const chips = [];
+      if (!raw || !raw.trim()) return { map, chips };
 
-  const headerRowIdx = rows.findIndex(r => r.type === 'header');
+      const tokens = raw.split(/[\n\r;,]+/);
+      tokens.forEach((rawTok, idx) => {
+        let token = rawTok.trim();
+        if (!token) return;
 
-  // Apply styles
-  rows.forEach((row, ri) => {
-    if (row.type === 'empty') return;
-    if (row.type === 'title') { styleRange(ws, ri, 0, ri, lastCol, STYLES.title); return; }
-    if (row.type === 'subtitle') { styleRange(ws, ri, 0, ri, lastCol, STYLES.subtitle); return; }
-    if (row.type === 'info') {
-      // Info rows: only cell A gets style; others absent so text overflows
-      const addr = XLSX.utils.encode_cell({ r: ri, c: 0 });
-      if (ws[addr]) ws[addr].s = STYLES.infoMerged;
-      return;
-    }
-    if (row.type === 'header') {
-      row.data.forEach((v, ci) => {
-        const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
-        if (ws[addr]) ws[addr].s = STYLES.tableHeader;
+        let note = "";
+        const paren = token.match(/\(([^)]+)\)/);
+        if (paren) {
+          note = paren[1].trim();
+          token = token.replace(/\([^)]+\)/g, "").trim();
+        }
+        const colonIdx = token.indexOf(":");
+        if (colonIdx > 6) {
+          note = token.slice(colonIdx + 1).trim();
+          token = token.slice(0, colonIdx).trim();
+        }
+
+        const range = token.match(/^(.+?)\s*(?:\-|–|—|đến|tới|->|\.\.)\s*(.+)$/i);
+        if (range) {
+          const d1 = parseFlexDate(range[1]);
+          const d2 = parseFlexDate(range[2]);
+          if (d1 && d2) {
+            const start = d1 <= d2 ? d1 : d2;
+            const end = d1 <= d2 ? d2 : d1;
+            chips.push({
+              tokenIndex: idx,
+              label: start.getTime() === end.getTime() ? toVNDate(start) : `${toVNDate(start)} – ${toVNDate(end)}`
+            });
+            const cur = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+            let guard = 0;
+            while (cur <= end && guard < 3660) {
+              const iso = toIso(cur);
+              if (!map.has(iso)) {
+                map.set(iso, {
+                  dateObj: new Date(cur.getFullYear(), cur.getMonth(), cur.getDate()),
+                  isoKey: iso,
+                  note: note || "Nghỉ theo khoảng ngày"
+                });
+              }
+              cur.setDate(cur.getDate() + 1);
+              guard++;
+            }
+            return;
+          }
+        }
+
+        const single = parseFlexDate(token);
+        if (single) {
+          const iso = toIso(single);
+          chips.push({ tokenIndex: idx, label: toVNDate(single) });
+          if (!map.has(iso)) {
+            map.set(iso, {
+              dateObj: single,
+              isoKey: iso,
+              note: note || "Ngày nghỉ nhập tay"
+            });
+          }
+        }
       });
-      return;
+
+      const sortedMap = new Map(Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])));
+      return { map: sortedMap, chips };
     }
-    if (row.type === 'datarow') {
-      row.data.forEach((v, ci) => {
-        if (v === '' || v == null) return;
-        const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
-        if (!ws[addr]) return;
-        if (ci === 0) ws[addr].s = STYLES.dataLeft;
-        else if (ci % 2 === 1) ws[addr].s = STYLES.data;
-        else ws[addr].s = STYLES.dataKC;
+
+    function showSnackbar(msg) {
+      const el = document.getElementById("snackbar");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.classList.remove("show"), 2800);
+    }
+
+    /* ==========================================================================
+       3. MATERIAL 3 RIPPLE CHOREOGRAPHY
+       ========================================================================== */
+    document.addEventListener("pointerdown", (e) => {
+      const target = e.target.closest(".m3-btn, .m3-icon-btn, .m3-text-btn, .m3-tab");
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const ripple = document.createElement("span");
+      ripple.className = "m3-ripple";
+      ripple.style.width = ripple.style.height = `${size}px`;
+      ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+      ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+      target.appendChild(ripple);
+      ripple.addEventListener("animationend", () => ripple.remove());
+    });
+
+    /* ==========================================================================
+       4. CORE SCHEDULING ALGORITHM (CONTINUOUS ACROSS START_DATE .. END_DATE)
+       ========================================================================== */
+    function computeSchedule() {
+      const A = Math.max(1, Math.floor(Number(state.A) || 1));
+      let B = Math.max(1, Math.min(A, Math.floor(Number(state.B) || 1)));
+      let C = Math.max(1, Math.min(A, Math.floor(Number(state.C) || 1)));
+
+      if (state.driver === "B") {
+        C = Math.max(1, Math.floor(A / B));
+      } else {
+        B = Math.max(1, Math.ceil(A / C));
+        C = Math.max(1, Math.floor(A / B));
+      }
+
+      const C_prime = Math.ceil(A / B);
+      const remainder = A % B;
+      const fullGroupsCount = remainder === 0 ? C_prime : C_prime - 1;
+
+      const groups = [];
+      for (let g = 0; g < C_prime; g++) {
+        const startNum = g * B + 1;
+        const endNum = Math.min((g + 1) * B, A);
+        groups.push({
+          index: g,
+          label: `${startNum} - ${endNum}`,
+          startNum,
+          endNum,
+          count: endNum - startNum + 1,
+          isRemainder: remainder !== 0 && g === C_prime - 1
+        });
+      }
+
+      const defaults = getDefaultDates();
+      let startDate = parseIso(state.startDateStr) || parseIso(defaults.startStr);
+      let endDate = parseIso(state.endDateStr) || parseIso(defaults.endStr);
+
+      if (endDate < startDate) {
+        endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        state.endDateStr = toIso(endDate);
+      }
+
+      const { map: holidayMap, chips: holidayChips } = parseHolidays(state.holidaysText);
+
+      let groupCursor = 0;
+      let totalCalendarDays = 0;
+      let totalWorkDays = 0;
+      let totalWeekendDays = 0;
+      let weekdayHolidaysCount = 0;
+      const appliedHolidays = [];
+      const yearStatsMap = new Map();
+      const groupDates = Array.from({ length: C_prime }, () => []);
+
+      const cur = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      let safety = 0;
+      while (cur <= endDate && safety < 10950) {
+        const dow = cur.getDay();
+        const iso = toIso(cur);
+        const yr = cur.getFullYear();
+        const isWeekend = dow === 0 || dow === 6;
+        const hEntry = holidayMap.get(iso);
+
+        if (!yearStatsMap.has(yr)) {
+          yearStatsMap.set(yr, {
+            year: yr,
+            workDays: 0,
+            weekendDays: 0,
+            holidaysCount: 0,
+            weekdayHolidaysCount: 0
+          });
+        }
+        const yStat = yearStatsMap.get(yr);
+
+        totalCalendarDays++;
+
+        if (hEntry) {
+          yStat.holidaysCount++;
+          if (!isWeekend) {
+            weekdayHolidaysCount++;
+            yStat.weekdayHolidaysCount++;
+          }
+          appliedHolidays.push({
+            dateStr: toVNDate(cur),
+            weekday: WEEKDAYS_VI[dow],
+            year: yr,
+            isWeekend,
+            note: hEntry.note
+          });
+        }
+
+        if (isWeekend) {
+          totalWeekendDays++;
+          yStat.weekendDays++;
+        } else if (!hEntry) {
+          groupDates[groupCursor].push(new Date(cur.getFullYear(), cur.getMonth(), cur.getDate()));
+          groupCursor = (groupCursor + 1) % C_prime;
+          totalWorkDays++;
+          yStat.workDays++;
+        }
+
+        cur.setDate(cur.getDate() + 1);
+        safety++;
+      }
+
+      let maxK = 0;
+      let gapSum = 0;
+      let gapCount = 0;
+
+      const rows = groups.map((grp) => {
+        const dates = groupDates[grp.index];
+        if (dates.length > maxK) maxK = dates.length;
+        const visits = dates.map((dt, i) => {
+          const gapDays = i < dates.length - 1 ? Math.round((dates[i + 1] - dt) / 86400000) : null;
+          if (gapDays !== null) {
+            gapSum += gapDays;
+            gapCount++;
+          }
+          return {
+            visitNum: i + 1,
+            dateStr: toVNDate(dt),
+            gapDays
+          };
+        });
+        return { group: grp, visits };
       });
-      return;
+
+      const avgInterval = gapCount > 0 ? gapSum / gapCount : 0;
+
+      state.B = B;
+      state.C = C;
+      state.computed = {
+        A,
+        B,
+        C,
+        C_prime,
+        remainder,
+        fullGroupsCount,
+        groups,
+        startDateStr: toVNDate(startDate),
+        endDateStr: toVNDate(endDate),
+        startIso: toIso(startDate),
+        endIso: toIso(endDate),
+        totalCalendarDays,
+        totalWorkDays,
+        totalWeekendDays,
+        weekdayHolidaysCount,
+        holidayMap,
+        holidayChips,
+        appliedHolidays,
+        yearStats: Array.from(yearStatsMap.values()),
+        rows,
+        maxK,
+        avgInterval
+      };
     }
-  });
 
-  // Merges
-  ws['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } }
-  ];
-
-  // Column widths
-  const cols = [{ wch: 14 }];
-  for (let k = 0; k < yd.maxK; k++) {
-    cols.push({ wch: 13 });
-    if (k < yd.maxK - 1) cols.push({ wch: 9 });
-  }
-  ws['!cols'] = cols;
-
-  // Row heights
-  const rowHeights = [];
-  rowHeights[0] = { hpt: 26 };
-  rowHeights[1] = { hpt: 18 };
-  if (headerRowIdx >= 0) rowHeights[headerRowIdx] = { hpt: 26 };
-  ws['!rows'] = rowHeights;
-
-  return ws;
-}
-
-// ================= BUILD REPORT SHEET =================
-function buildReportSheet(st) {
-  const rows = [];
-  const push = (type, data) => rows.push({ type, data });
-  const pad4 = (text) => [text, '', '', ''];
-
-  push('title', pad4('BÁO CÁO TỔNG HỢP LỊCH HẸN BỆNH NHÂN'));
-  push('subtitle', pad4('by Bác sĩ Phạm Văn Thái'));
-  push('empty', []);
-
-  push('section', pad4('THÔNG TIN CHUNG'));
-  push('kv', ['Tổng số bệnh nhân (A)', st.input.A]);
-  push('kv', ['Số BN mỗi nhóm (B)', st.input.B]);
-  push('kv', ['Số nhóm thực tế (C)', st.actualC]);
-  if (st.cAdjusted) {
-    push('kv', ['C yêu cầu', st.cAdjusted.requested]);
-    push('kv', ['C thực tế được dùng', st.cAdjusted.actual]);
-    push('kv-long', ['Lý do điều chỉnh', `Với A=${st.input.A}, C=${st.cAdjusted.requested} → B=⌈A/C⌉=${st.cAdjusted.B} → C'=⌈A/B⌉=${st.cAdjusted.actual} ≠ ${st.cAdjusted.requested}. Hệ thống tự động dùng C'=${st.cAdjusted.actual}.`]);
-  }
-  push('kv', ['Nhóm đầu tiên', st.groups[0].label]);
-  push('kv', ['Nhóm cuối cùng', st.groups[st.groups.length - 1].label + ` (${st.groups[st.groups.length - 1].size} BN)`]);
-  push('kv', ['Ngày bắt đầu yêu cầu', fmtDate(st.input.startDate)]);
-  push('kv', ['Ngày bắt đầu hiệu lực', fmtDate(st.gen.adjustedStart) + ` (${dayName(st.gen.adjustedStart)})`]);
-  push('kv', ['Số năm', st.input.years]);
-  push('kv', ['Phạm vi', `${fmtDate(st.gen.adjustedStart)} → ${fmtDate(st.gen.endDate)}`]);
-  push('empty', []);
-
-  push('section', pad4('THỐNG KÊ'));
-  push('kv', ['Tổng ngày làm việc đã xếp', st.totalWorkingDays]);
-  push('kv', ['Số vòng hoàn chỉnh', st.fullCycles]);
-  push('kv', ['Tổng ngày T7/CN bỏ qua', st.totalWeekend]);
-  push('kv', ['Tổng ngày lễ nhập tay bỏ qua', st.totalManual]);
-  push('empty', []);
-
-  push('section', pad4('CẢNH BÁO'));
-  if (!st.warnings.length) {
-    push('info-plain', pad4('(Không có cảnh báo)'));
-  } else {
-    st.warnings.forEach(w => push('kv-long', [w.title, w.text]));
-  }
-  push('empty', []);
-
-  push('section', pad4('NGÀY NGHỈ ĐÃ ÁP DỤNG'));
-  push('header4', ['STT', 'Ngày', 'Thứ', 'Lý do']);
-  st.appliedHolidays.forEach((h, i) => push('row4', [i + 1, fmtDate(h.date), dayName(h.date), h.reason]));
-  push('empty', []);
-
-  push('section', pad4('TỔNG HỢP NGÀY NGHỈ THEO NĂM'));
-  push('header4', ['Năm', 'T7/CN', 'Lễ nhập tay', 'Tổng']);
-  const byYear = {};
-  for (const h of st.appliedHolidays) {
-    const y = h.date.getFullYear();
-    if (!byYear[y]) byYear[y] = { weekend: 0, manual: 0 };
-    if (h.reason.charCodeAt(0) === 67) byYear[y].weekend++; else byYear[y].manual++;
-  }
-  Object.keys(byYear).sort().forEach(y => {
-    const b = byYear[y];
-    push('row4', [+y, b.weekend, b.manual, b.weekend + b.manual]);
-  });
-
-  const aoa = rows.map(r => r.data);
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-  // Apply styles
-  rows.forEach((row, ri) => {
-    if (row.type === 'empty') return;
-    switch (row.type) {
-      case 'title':
-      case 'subtitle':
-      case 'section':
-      case 'info-plain':
-        styleRange(ws, ri, 0, ri, 3, STYLES[row.type === 'info-plain' ? 'infoMerged' : row.type]);
-        break;
-      case 'kv':
-        styleRange(ws, ri, 0, ri, 0, STYLES.label);
-        styleRange(ws, ri, 1, ri, 1, STYLES.value);
-        break;
-      case 'kv-long':
-        styleRange(ws, ri, 0, ri, 0, STYLES.label);
-        styleRange(ws, ri, 1, ri, 3, STYLES.value);
-        break;
-      case 'header4':
-        styleRange(ws, ri, 0, ri, 3, STYLES.tableHeader);
-        break;
-      case 'row4':
-        styleRange(ws, ri, 0, ri, 3, STYLES.data);
-        break;
+    /* ==========================================================================
+       5. UI RENDERING
+       ========================================================================== */
+    function renderHolidayChips(chips) {
+      const host = document.getElementById("holidayChips");
+      if (!chips || chips.length === 0) {
+        host.innerHTML = "";
+        return;
+      }
+      host.innerHTML = chips
+        .map(
+          (c) => `
+          <span class="m3-chip">
+            <span>${c.label}</span>
+            <button type="button" class="m3-chip-close" data-tok-idx="${c.tokenIndex}" aria-label="Xóa ${c.label}" title="Xóa">&times;</button>
+          </span>`
+        )
+        .join("");
     }
-  });
 
-  // Merges
-  const merges = [];
-  rows.forEach((row, ri) => {
-    if (row.type === 'title' || row.type === 'subtitle' || row.type === 'section' || row.type === 'info-plain') {
-      merges.push({ s: { r: ri, c: 0 }, e: { r: ri, c: 3 } });
+    function renderUI() {
+      const data = state.computed;
+      if (!data) return;
+
+      document.getElementById("inputA").value = data.A;
+      document.getElementById("inputB").value = data.B;
+      document.getElementById("inputC").value = data.C;
+      document.getElementById("inputStartDate").value = data.startIso;
+      document.getElementById("inputEndDate").value = data.endIso;
+      renderHolidayChips(data.holidayChips);
+
+      // Scorecards
+      document.getElementById("statCPrime").textContent = `${data.C_prime} nhóm`;
+      document.getElementById("statGroupSub").textContent = `${data.A} BN • ${data.B} BN/ngày`;
+
+      document.getElementById("statMaxK").textContent = `${data.maxK} lần`;
+      document.getElementById("statAvgGap").textContent =
+        data.avgInterval > 0
+          ? `Giãn cách TB: ~${data.avgInterval.toFixed(1)} ngày lịch`
+          : "Chưa đủ 2 lần hẹn";
+
+      document.getElementById("statWorkDays").textContent = `${data.totalWorkDays} ngày`;
+      document.getElementById("statDateRange").textContent = `${data.startDateStr} – ${data.endDateStr}`;
+
+      document.getElementById("statSkippedHolidays").textContent = `${data.appliedHolidays.length} ngày`;
+      document.getElementById("statSkippedWeekends").textContent = `+ ${data.totalWeekendDays} ngày T7/CN bỏ qua`;
+
+      // Tabs
+      const isReport = state.activeTab === "report";
+      const tabSched = document.getElementById("tabSchedule");
+      const tabRep = document.getElementById("tabReport");
+      tabSched.classList.toggle("active", !isReport);
+      tabSched.setAttribute("aria-selected", String(!isReport));
+      tabRep.classList.toggle("active", isReport);
+      tabRep.setAttribute("aria-selected", String(isReport));
+      document.getElementById("searchBoxWrap").style.display = isReport ? "none" : "flex";
+
+      const viewHost = document.getElementById("viewHost");
+      const capLeft = document.getElementById("captionLeft");
+      const capRight = document.getElementById("captionRight");
+
+      if (isReport) {
+        capLeft.textContent = "Báo cáo chi tiết cấu hình phân nhóm (C'), thống kê kỳ xếp lịch và ngày nghỉ đã áp dụng.";
+        capRight.textContent = `${data.startDateStr} – ${data.endDateStr}`;
+        viewHost.innerHTML = buildReportView(data);
+      } else {
+        const cols = Math.min(10, data.maxK);
+        const matchInfo = findMatchedGroup(data, state.lookupQuery);
+
+        if (matchInfo) {
+          capLeft.innerHTML = `<span class="lookup-badge">BN #${matchInfo.patientNum} → Nhóm ${matchInfo.group.label} (Nhóm thứ ${matchInfo.group.index + 1}/${data.C_prime})</span>`;
+        } else {
+          capLeft.textContent = data.maxK > 10
+            ? `Xem trước 10 lần hẹn đầu tiên (file Excel xuất đầy đủ toàn bộ ${data.maxK} lần).`
+            : `Hiển thị đầy đủ ${data.maxK} lần hẹn (${data.startDateStr} – ${data.endDateStr}).`;
+        }
+        capRight.textContent = `${data.C_prime} nhóm • ${data.totalWorkDays} ngày khám`;
+        viewHost.innerHTML = buildScheduleTable(data, cols, matchInfo ? matchInfo.group.index : -1);
+
+        const vp = viewHost.querySelector(".table-viewport");
+        if (vp) {
+          vp.addEventListener("scroll", () => {
+            vp.classList.toggle("scrolled-x", vp.scrollLeft > 2);
+          });
+          if (matchInfo) {
+            const matchedRow = vp.querySelector("tr.is-match");
+            if (matchedRow) {
+              matchedRow.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            }
+          }
+        }
+      }
     }
-    if (row.type === 'kv-long') {
-      merges.push({ s: { r: ri, c: 1 }, e: { r: ri, c: 3 } });
+
+    function findMatchedGroup(data, query) {
+      const q = (query || "").trim();
+      if (!q) return null;
+      const num = parseInt(q, 10);
+      if (Number.isNaN(num) || num < 1 || num > data.A) return null;
+      const idx = Math.floor((num - 1) / data.B);
+      const grp = data.groups[idx];
+      return grp ? { patientNum: num, group: grp } : null;
     }
-  });
-  ws['!merges'] = merges;
 
-  // Column widths
-  ws['!cols'] = [{ wch: 32 }, { wch: 28 }, { wch: 12 }, { wch: 42 }];
+    function buildScheduleTable(data, maxCols, highlightIdx = -1) {
+      if (data.maxK === 0) {
+        return `<div style="padding: 40px; text-align: center; color: var(--md-sys-color-on-surface-variant);">Không có ngày khám nào trong khoảng thời gian đã chọn.</div>`;
+      }
 
-  // Row heights
-  const rowHeights = [];
-  rowHeights[0] = { hpt: 28 };
-  rowHeights[1] = { hpt: 18 };
-  rows.forEach((row, ri) => {
-    if (row.type === 'section') rowHeights[ri] = { hpt: 22 };
-    if (row.type === 'header4') rowHeights[ri] = { hpt: 22 };
-    if (row.type === 'kv-long') {
-      const textLen = String(row.data[1] || '').length;
-      const lines = Math.max(1, Math.ceil(textLen / 70));
-      rowHeights[ri] = { hpt: lines * 16 + 6 };
+      let thead = `<tr><th>Nhóm</th>`;
+      for (let k = 1; k <= maxCols; k++) {
+        thead += `<th>Lần ${k}</th>`;
+        if (k < maxCols) thead += `<th>Khoảng cách</th>`;
+      }
+      thead += `</tr>`;
+
+      let tbody = "";
+      data.rows.forEach((row) => {
+        const cls = [];
+        if (row.group.isRemainder) cls.push("is-remainder");
+        if (row.group.index === highlightIdx) cls.push("is-match");
+        tbody += `<tr${cls.length ? ` class="${cls.join(" ")}"` : ""}>`;
+        tbody += `<td title="Nhóm ${row.group.index + 1} (${row.group.count} BN)">${row.group.label}</td>`;
+
+        for (let k = 0; k < maxCols; k++) {
+          const v = row.visits[k];
+          if (v) {
+            tbody += `<td class="cell-date">${v.dateStr}</td>`;
+            if (k < maxCols - 1) {
+              if (v.gapDays !== null) {
+                const isLong = v.gapDays > Math.round(data.avgInterval + 2);
+                tbody += isLong
+                  ? `<td class="cell-gap"><span class="gap-pill">${v.gapDays} ngày</span></td>`
+                  : `<td class="cell-gap">${v.gapDays} ngày</td>`;
+              } else {
+                tbody += `<td class="cell-gap">—</td>`;
+              }
+            }
+          } else {
+            tbody += `<td class="cell-gap">—</td>`;
+            if (k < maxCols - 1) tbody += `<td class="cell-gap">—</td>`;
+          }
+        }
+        tbody += `</tr>`;
+      });
+
+      return `
+        <div class="table-viewport">
+          <table class="m3-table">
+            <thead>${thead}</thead>
+            <tbody>${tbody}</tbody>
+          </table>
+        </div>
+      `;
     }
-  });
-  ws['!rows'] = rowHeights;
 
-  return ws;
-}
+    function buildReportView(data) {
+      let html = `<div class="report-container">`;
 
-// ================= EXCEL DOWNLOAD =================
-function downloadExcel(wb, filename) {
-  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; a.style.display = 'none';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-}
+      // Section 1
+      html += `
+        <div>
+          <div class="report-section-title">1. Cấu hình phân nhóm thực tế (C')</div>
+          <div style="overflow-x: auto;">
+            <table class="m3-report-table">
+              <thead>
+                <tr>
+                  <th style="width: 44%;">Chỉ tiêu</th>
+                  <th style="width: 22%;">Giá trị</th>
+                  <th>Chi tiết</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>A - Tổng số bệnh nhân đang quản lý hay cần xếp lịch</td>
+                  <td><strong>${data.A} bệnh nhân</strong></td>
+                  <td>Đánh số từ 1 đến ${data.A}</td>
+                </tr>
+                <tr>
+                  <td>B - Mỗi ngày sẽ có bao nhiêu bệnh nhân?</td>
+                  <td><strong>${data.B} bệnh nhân</strong></td>
+                  <td>Số lượng bệnh nhân mỗi nhóm tiêu chuẩn</td>
+                </tr>
+                <tr>
+                  <td>C - Số nhóm tiêu chuẩn (A / B)</td>
+                  <td><strong>${data.C} nhóm</strong></td>
+                  <td>Phần nguyên phép chia</td>
+                </tr>
+                <tr style="background-color: var(--md-sys-color-warning-container); color: var(--md-sys-color-on-warning-container);">
+                  <td><strong>C' - Tổng số nhóm thực tế áp dụng</strong></td>
+                  <td><strong>${data.C_prime} nhóm</strong></td>
+                  <td>${
+                    data.remainder === 0
+                      ? `Chia hết: ${data.C_prime} nhóm × ${data.B} BN/nhóm`
+                      : `Giữ nhóm cuối lẻ: ${data.fullGroupsCount} nhóm (${data.B} BN/nhóm) + nhóm cuối ${data.groups[data.C_prime - 1].label} (${data.remainder} BN)`
+                  }</td>
+                </tr>
+                <tr>
+                  <td>Bắt đầu xếp lịch từ ngày nào?</td>
+                  <td><strong>${data.startDateStr}</strong></td>
+                  <td>Nhóm đầu tiên (1 - ${data.groups[0].endNum}) bắt đầu khám</td>
+                </tr>
+                <tr>
+                  <td>Kết thúc xếp lịch vào ngày nào?</td>
+                  <td><strong>${data.endDateStr}</strong></td>
+                  <td>Tổng cộng ${data.totalCalendarDays} ngày lịch (xoay vòng từ nhóm 1 đến nhóm ${data.C_prime})</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
 
-function exportExcel(st) {
-  const wb = XLSX.utils.book_new();
+      // Section 2
+      html += `
+        <div>
+          <div class="report-section-title">2. Thống kê tổng hợp kỳ xếp lịch</div>
+          <div style="overflow-x: auto;">
+            <table class="m3-report-table">
+              <thead>
+                <tr>
+                  <th>Giai đoạn</th>
+                  <th>Ngày khám xếp lịch</th>
+                  <th>T7/CN bỏ qua</th>
+                  <th>Ngày nghỉ đã bỏ qua</th>
+                  <th>Lần hẹn tối đa (K)</th>
+                  <th>Khoảng cách TB</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+                  <td><strong>Toàn kỳ (${data.startDateStr} – ${data.endDateStr})</strong></td>
+                  <td><strong>${data.totalWorkDays} ngày</strong></td>
+                  <td>${data.totalWeekendDays} ngày</td>
+                  <td><strong>${data.appliedHolidays.length} ngày</strong> (${data.weekdayHolidaysCount} ngày thường)</td>
+                  <td><strong>${data.maxK} lần</strong></td>
+                  <td>${data.avgInterval > 0 ? data.avgInterval.toFixed(1) + " ngày" : "—"}</td>
+                </tr>
+      `;
 
-  // Thứ tự: các năm trước, Báo cáo CUỐI CÙNG
-  for (const yd of st.yearsData) {
-    const ws = buildYearSheet(st, yd);
-    XLSX.utils.book_append_sheet(wb, ws, `Năm ${yd.year}`);
-  }
-  const wsReport = buildReportSheet(st);
-  XLSX.utils.book_append_sheet(wb, wsReport, 'Báo cáo');
+      data.yearStats.forEach((ys) => {
+        html += `
+          <tr>
+            <td>Năm ${ys.year}</td>
+            <td>${ys.workDays} ngày</td>
+            <td>${ys.weekendDays} ngày</td>
+            <td>${ys.holidaysCount} ngày (${ys.weekdayHolidaysCount} ngày thường)</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+        `;
+      });
 
-  const fname = `LichHen_${st.input.A}BN_${fmtDateISO(st.gen.adjustedStart).replace(/-/g, '')}.xlsx`;
-  downloadExcel(wb, fname);
-}
+      html += `</tbody></table></div></div>`;
 
-// ================= EVENTS =================
-function updateCFromB() {
-  const A = parseInt(document.getElementById('A').value, 10) || 0;
-  const B = parseInt(document.getElementById('B').value, 10) || 0;
-  const mode = document.querySelector('input[name="mode"]:checked').value;
-  if (mode === 'B' && A > 0 && B > 0) document.getElementById('C').value = Math.ceil(A / B);
-}
-function updateBFromC() {
-  const A = parseInt(document.getElementById('A').value, 10) || 0;
-  const C = parseInt(document.getElementById('C').value, 10) || 0;
-  const mode = document.querySelector('input[name="mode"]:checked').value;
-  if (mode === 'C' && A > 0 && C > 0) document.getElementById('B').value = Math.ceil(A / C);
-}
-function handleModeChange() {
-  const mode = document.querySelector('input[name="mode"]:checked').value;
-  const BEl = document.getElementById('B'), CEl = document.getElementById('C');
-  if (mode === 'B') { BEl.readOnly = false; CEl.readOnly = true; updateCFromB(); }
-  else { BEl.readOnly = true; CEl.readOnly = false; updateBFromC(); }
-}
+      // Section 3
+      html += `
+        <div>
+          <div class="report-section-title">3. Tổng hợp Ngày nghỉ đã áp dụng (Ngày nghỉ đã bỏ qua: ${data.appliedHolidays.length} ngày)</div>
+          <div style="overflow-x: auto;">
+            <table class="m3-report-table">
+              <thead>
+                <tr>
+                  <th style="width: 56px;">STT</th>
+                  <th>Ngày nghỉ</th>
+                  <th>Thứ</th>
+                  <th>Năm</th>
+                  <th>Trạng thái</th>
+                  <th>Ghi chú</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
 
-function markDirty() {
-  if (!state) return;
-  document.getElementById('exportBtn').disabled = true;
-  document.getElementById('printBtn').disabled = true;
-  document.getElementById('previewBtn').classList.add('dirty');
-  const w = document.getElementById('warnings');
-  if (!w.querySelector('.dirty-notice')) {
-    w.insertAdjacentHTML('afterbegin', '<div class="warn dirty-notice"><strong>ℹ Dữ liệu đã thay đổi</strong>Bấm "Xem trước" để cập nhật kết quả trước khi xuất/in.</div>');
-  }
-}
+      if (data.appliedHolidays.length === 0) {
+        html += `<tr><td colspan="6" style="color: var(--md-sys-color-on-surface-variant); text-align: center;">Không có ngày nghỉ nhập tay nào nằm trong khoảng thời gian xếp lịch.</td></tr>`;
+      } else {
+        data.appliedHolidays.forEach((h, i) => {
+          html += `
+            <tr>
+              <td>${i + 1}</td>
+              <td><strong>${h.dateStr}</strong></td>
+              <td>${h.weekday}</td>
+              <td>${h.year}</td>
+              <td><span class="status-badge${h.isWeekend ? " weekend" : ""}">${h.isWeekend ? "Trùng T7/CN" : "Đã bỏ qua (dịch lịch)"}</span></td>
+              <td>${h.note}</td>
+            </tr>
+          `;
+        });
+      }
 
-function doPreview() {
-  const input = collectInputs();
-  document.getElementById('previewBtn').classList.remove('dirty');
-  if (input.errors.length) {
-    renderWarnings([{ type: 'error', title: 'Dữ liệu không hợp lệ', text: input.errors.join(' · ') }]);
-    document.getElementById('exportBtn').disabled = true;
-    document.getElementById('printBtn').disabled = true;
-    state = null;
-    return;
-  }
-  const st = computeState(input);
-  if (!st) return;
-  state = st;
-  renderWarnings(st.warnings);
-  renderStats(st);
-  renderTabs(st.yearsData);
-  renderYearTable(st.yearsData, st.yearsData[0].year);
-  updatePrintHeader(st.yearsData[0].year);
-  document.getElementById('exportBtn').disabled = false;
-  document.getElementById('printBtn').disabled = false;
-}
+      html += `</tbody></table></div></div></div>`;
+      return html;
+    }
 
-function doExport() {
-  if (!state) return;
-  const btn = document.getElementById('exportBtn');
-  const orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '⏳ Đang xuất...';
-  requestAnimationFrame(() => setTimeout(() => {
-    try { exportExcel(state); }
-    catch (e) { console.error(e); alert('Xuất file thất bại: ' + e.message); }
-    finally { btn.disabled = false; btn.innerHTML = orig; }
-  }, 10));
-}
+    /* ==========================================================================
+       6. EXCEL EXPORT (.XLSX — 1 SHEET ONLY)
+       ========================================================================== */
+    function handleExportExcel() {
+      if (!state.computed) computeSchedule();
+      const data = state.computed;
+      const CCol = PureXlsxBuilder.colLetter;
 
-function doReset() {
-  document.getElementById('A').value = 100;
-  document.querySelector('input[name="mode"][value="B"]').checked = true;
-  document.getElementById('B').value = 10;
-  document.getElementById('C').value = 10;
-  document.getElementById('startDate').value = fmtDateISO(new Date());
-  document.getElementById('years').value = 1;
-  document.getElementById('holidays').value = '';
-  handleModeChange();
-  state = null;
-  document.getElementById('warnings').innerHTML = '';
-  document.getElementById('stats').innerHTML = '';
-  document.getElementById('tabs').innerHTML = '';
-  document.getElementById('previewTable').innerHTML = '';
-  document.getElementById('exportBtn').disabled = true;
-  document.getElementById('printBtn').disabled = true;
-  document.getElementById('previewBtn').classList.remove('dirty');
-}
+      const visitCols = data.maxK > 0 ? (data.maxK * 2 - 1) : 1;
+      const totalCols = Math.max(12, 3 + visitCols);
+      const lastCol = CCol(totalCols - 1);
 
-function init() {
-  document.getElementById('startDate').value = fmtDateISO(new Date());
-  document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', handleModeChange));
-  document.getElementById('A').addEventListener('input', () => {
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-    mode === 'B' ? updateCFromB() : updateBFromC();
-  });
-  document.getElementById('B').addEventListener('input', updateCFromB);
-  document.getElementById('C').addEventListener('input', updateBFromC);
-  ['A', 'B', 'C', 'startDate', 'years', 'holidays'].forEach(id => {
-    document.getElementById(id).addEventListener('input', markDirty);
-    document.getElementById(id).addEventListener('change', markDirty);
-  });
-  document.getElementById('previewBtn').addEventListener('click', doPreview);
-  document.getElementById('exportBtn').addEventListener('click', doExport);
-  document.getElementById('printBtn').addEventListener('click', printCurrentYear);
-  document.getElementById('resetBtn').addEventListener('click', doReset);
-  document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); doPreview(); }
-  });
-  handleModeChange();
-}
-init();
-</script>
+      const colWidths = [7, 17, 10];
+      for (let c = 3; c < totalCols; c++) {
+        const rel = c - 3;
+        if (rel < visitCols) {
+          colWidths.push(rel % 2 === 0 ? 13 : 11);
+        } else {
+          colWidths.push(12);
+        }
+      }
+
+      const rows = [];
+      const merges = [];
+
+      const makeBlankCells = (styleId) =>
+        Array.from({ length: totalCols }, () => (styleId !== undefined ? { v: "", s: styleId } : null));
+
+      // Row 1: Main Title Banner
+      const r1 = makeBlankCells(1);
+      r1[0] = { v: `BẢNG LỊCH HẸN KHÁM BỆNH NHÂN ĐỊNH KỲ (${data.startDateStr} – ${data.endDateStr})`, s: 1 };
+      rows.push({ cells: r1, ht: 30 });
+      merges.push(`A1:${lastCol}1`);
+
+      // Row 2: Subtitle & Attribution
+      const r2 = makeBlankCells(2);
+      r2[0] = {
+        v: `Công cụ tính lịch hẹn bệnh nhân (bởi Bác sĩ Phạm Văn Thái)  •  Tổng thời gian: ${data.totalCalendarDays} ngày lịch (${data.totalWorkDays} ngày khám thực tế)`,
+        s: 2
+      };
+      rows.push({ cells: r2, ht: 22 });
+      merges.push(`A2:${lastCol}2`);
+
+      // Row 3: Spacer
+      rows.push({ cells: [], ht: 10 });
+
+      // Rows 4-5: 6 KPI Cards
+      const kpiItems = [
+        { label: "Tổng bệnh nhân (A)", val: `${data.A} BN`, sVal: 4 },
+        { label: "Định mức / ngày (B)", val: `${data.B} BN/ngày`, sVal: 4 },
+        { label: "Tổng số nhóm (C')", val: `${data.C_prime} nhóm`, sVal: data.remainder > 0 ? 5 : 4 },
+        { label: "Số lần hẹn tối đa (K)", val: `${data.maxK} lần`, sVal: 4 },
+        { label: "Giãn cách trung bình", val: data.avgInterval > 0 ? `${data.avgInterval.toFixed(1)} ngày` : "—", sVal: 4 },
+        { label: "Ngày nghỉ đã bỏ qua", val: `${data.appliedHolidays.length} ngày (+${data.totalWeekendDays} T7/CN)`, sVal: data.appliedHolidays.length > 0 ? 5 : 4 }
+      ];
+
+      const r4 = makeBlankCells();
+      const r5 = makeBlankCells();
+      kpiItems.forEach((item, idx) => {
+        const cStart = idx * 2;
+        const cEnd = cStart + 1;
+        r4[cStart] = { v: item.label, s: 3 };
+        r4[cEnd] = { v: "", s: 3 };
+        r5[cStart] = { v: item.val, s: item.sVal };
+        r5[cEnd] = { v: "", s: item.sVal };
+        merges.push(`${CCol(cStart)}4:${CCol(cEnd)}4`);
+        merges.push(`${CCol(cStart)}5:${CCol(cEnd)}5`);
+      });
+      rows.push({ cells: r4, ht: 20 });
+      rows.push({ cells: r5, ht: 24 });
+
+      // Row 6: Spacer
+      rows.push({ cells: [], ht: 12 });
+
+      // Row 7-8: Two-Tier Grouped Headers
+      const tableEndColIdx = 2 + visitCols;
+      const r7 = makeBlankCells();
+      r7[0] = { v: "PHÂN NHÓM BỆNH NHÂN", s: 6 };
+      r7[1] = { v: "", s: 6 };
+      r7[2] = { v: "", s: 6 };
+      merges.push("A7:C7");
+
+      const r8 = makeBlankCells();
+      r8[0] = { v: "STT", s: 7 };
+      r8[1] = { v: "Nhóm bệnh nhân", s: 7 };
+      r8[2] = { v: "Số BN", s: 7 };
+
+      let colPtr = 3;
+      for (let k = 1; k <= data.maxK; k++) {
+        if (k < data.maxK) {
+          r7[colPtr] = { v: `LẦN HẸN ${k}`, s: 6 };
+          r7[colPtr + 1] = { v: "", s: 6 };
+          merges.push(`${CCol(colPtr)}7:${CCol(colPtr + 1)}7`);
+
+          r8[colPtr] = { v: "Ngày hẹn", s: 7 };
+          r8[colPtr + 1] = { v: "Cách (ngày)", s: 7 };
+          colPtr += 2;
+        } else {
+          r7[colPtr] = { v: `LẦN HẸN ${k}`, s: 6 };
+          r8[colPtr] = { v: "Ngày hẹn", s: 7 };
+          colPtr += 1;
+        }
+      }
+
+      rows.push({ cells: r7, ht: 24 });
+      rows.push({ cells: r8, ht: 22 });
+
+      // Rows 9..N: Data Rows
+      const firstDataRow = 9;
+      const longGapThreshold = Math.round(data.avgInterval + 2);
+
+      data.rows.forEach((r, rIdx) => {
+        const isOdd = rIdx % 2 === 1;
+        const sDate = isOdd ? 11 : 10;
+        const sGap = isOdd ? 13 : 12;
+        const sGrp = r.group.isRemainder ? 9 : 8;
+
+        const line = makeBlankCells();
+        line[0] = { v: rIdx + 1, s: 18 };
+        line[1] = { v: r.group.label, s: sGrp };
+        line[2] = { v: r.group.count, s: r.group.isRemainder ? 9 : 18 };
+
+        let cIdx = 3;
+        for (let k = 0; k < data.maxK; k++) {
+          const v = r.visits[k];
+          if (v) {
+            line[cIdx] = { v: v.dateStr, s: sDate };
+            if (k < data.maxK - 1) {
+              if (v.gapDays !== null) {
+                const isLong = data.avgInterval > 0 && v.gapDays > longGapThreshold;
+                line[cIdx + 1] = { v: v.gapDays, s: isLong ? 14 : sGap };
+              } else {
+                line[cIdx + 1] = { v: "—", s: 15 };
+              }
+              cIdx += 2;
+            } else {
+              cIdx += 1;
+            }
+          } else {
+            line[cIdx] = { v: "—", s: 15 };
+            if (k < data.maxK - 1) {
+              line[cIdx + 1] = { v: "—", s: 15 };
+              cIdx += 2;
+            } else {
+              cIdx += 1;
+            }
+          }
+        }
+        rows.push({ cells: line, ht: 21 });
+      });
+
+      const lastDataRow = firstDataRow + data.rows.length - 1;
+      const summaryRowNum = lastDataRow + 1;
+
+      // Summary Row with Live Formulas
+      const rSum = makeBlankCells();
+      rSum[0] = { v: "TỔNG CỘNG / SỐ NHÓM CÓ LỊCH HẸN", s: 16 };
+      rSum[1] = { v: "", s: 16 };
+      merges.push(`A${summaryRowNum}:B${summaryRowNum}`);
+      rSum[2] = { f: `SUM(C${firstDataRow}:C${lastDataRow})`, s: 16 };
+
+      let sumPtr = 3;
+      for (let k = 1; k <= data.maxK; k++) {
+        const colL = CCol(sumPtr);
+        rSum[sumPtr] = { f: `COUNTIF(${colL}${firstDataRow}:${colL}${lastDataRow},"*/*")`, s: 16 };
+        if (k < data.maxK) {
+          const gapColL = CCol(sumPtr + 1);
+          rSum[sumPtr + 1] = { f: `IFERROR(ROUND(AVERAGE(${gapColL}${firstDataRow}:${gapColL}${lastDataRow}),1),"—")`, s: 16 };
+          sumPtr += 2;
+        } else {
+          sumPtr += 1;
+        }
+      }
+      rows.push({ cells: rSum, ht: 24 });
+
+      // Legend Footnote
+      rows.push({ cells: [], ht: 8 });
+      const noteRowNum = summaryRowNum + 2;
+      const rNote = makeBlankCells();
+      rNote[0] = {
+        v: "Ghi chú: Lịch tự động bỏ qua Thứ Bảy, Chủ Nhật và các ngày nghỉ đã cấu hình. Ô giãn cách tô vàng nhạt biểu thị chu kỳ dài hơn mức trung bình do trùng ngày nghỉ/cuối tuần.",
+        s: 17
+      };
+      rows.push({ cells: rNote, ht: 20 });
+      merges.push(`A${noteRowNum}:${lastCol}${noteRowNum}`);
+
+      const sheets = [{
+        name: "Lịch hẹn bệnh nhân",
+        rows,
+        colWidths,
+        merges,
+        autoFilter: `A8:${CCol(tableEndColIdx)}8`,
+        freezeRow: 8,
+        freezeCol: 3
+      }];
+
+      const sTag = data.startDateStr.replace(/\//g, "-");
+      const eTag = data.endDateStr.replace(/\//g, "-");
+      const fileName = `Lich_hen_benh_nhan_${sTag}_${eTag}.xlsx`;
+
+      PureXlsxBuilder.downloadXlsx(fileName, sheets);
+      showSnackbar(`Đã tải xuống ${fileName}`);
+    }
+
+    /* ==========================================================================
+       7. PRINT SCHEDULE
+       ========================================================================== */
+    function handlePrint() {
+      if (!state.computed) computeSchedule();
+      const data = state.computed;
+      const printHost = document.getElementById("printHost");
+
+      let html = `
+        <div class="print-header">
+          <h1>BẢNG LỊCH HẸN BỆNH NHÂN (${data.startDateStr} – ${data.endDateStr})</h1>
+          <p>Công cụ tính lịch hẹn bệnh nhân (bởi Bác sĩ Phạm Văn Thái) • Tổng BN: ${data.A} | BN/ngày: ${data.B} | Tổng nhóm (C'): ${data.C_prime} | Ngày khám: ${data.totalWorkDays} | Ngày nghỉ đã bỏ qua: ${data.appliedHolidays.length} ngày</p>
+        </div>
+      `;
+      html += buildScheduleTable(data, data.maxK, -1);
+
+      printHost.innerHTML = html;
+      printHost.style.display = "block";
+      window.print();
+      setTimeout(() => { printHost.style.display = "none"; }, 400);
+    }
+
+    /* ==========================================================================
+       8. THEME & PERSISTENCE
+       ========================================================================== */
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem(STORAGE_KEYS.THEME, theme);
+      document.getElementById("iconSun").style.display = theme === "dark" ? "block" : "none";
+      document.getElementById("iconMoon").style.display = theme === "dark" ? "none" : "block";
+    }
+
+    function saveStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify({
+          A: state.A,
+          B: state.B,
+          C: state.C,
+          driver: state.driver,
+          startDateStr: state.startDateStr,
+          endDateStr: state.endDateStr
+        }));
+        localStorage.setItem(STORAGE_KEYS.HOLIDAYS, state.holidaysText);
+      } catch (e) {}
+    }
+
+    function loadStorage() {
+      const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+      if (savedTheme === "dark" || savedTheme === "light") {
+        applyTheme(savedTheme);
+      } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        applyTheme("dark");
+      } else {
+        applyTheme("light");
+      }
+
+      const defaults = getDefaultDates();
+      state.startDateStr = defaults.startStr;
+      state.endDateStr = defaults.endStr;
+
+      try {
+        const cfg = JSON.parse(localStorage.getItem(STORAGE_KEYS.CONFIG) || "null");
+        if (cfg) {
+          if (cfg.A) state.A = cfg.A;
+          if (cfg.B) state.B = cfg.B;
+          if (cfg.C) state.C = cfg.C;
+          if (cfg.driver) state.driver = cfg.driver;
+          if (cfg.startDateStr) state.startDateStr = cfg.startDateStr;
+          if (cfg.endDateStr) state.endDateStr = cfg.endDateStr;
+        }
+        const hol = localStorage.getItem(STORAGE_KEYS.HOLIDAYS);
+        if (hol !== null) state.holidaysText = hol;
+      } catch (e) {}
+
+      document.getElementById("inputA").value = state.A;
+      document.getElementById("inputB").value = state.B;
+      document.getElementById("inputC").value = state.C;
+      document.getElementById("inputStartDate").value = state.startDateStr;
+      document.getElementById("inputEndDate").value = state.endDateStr;
+      document.getElementById("inputHolidays").value = state.holidaysText;
+    }
+
+    function updateAll() {
+      computeSchedule();
+      renderUI();
+      saveStorage();
+    }
+
+    /* ==========================================================================
+       9. EVENT WIRING
+       ========================================================================== */
+    document.addEventListener("DOMContentLoaded", () => {
+      loadStorage();
+      updateAll();
+
+      // AppBar dynamic scroll elevation (M3 Top App Bar behavior)
+      const appBar = document.getElementById("appBar");
+      window.addEventListener("scroll", () => {
+        appBar.classList.toggle("is-scrolled", window.scrollY > 4);
+      }, { passive: true });
+
+      document.getElementById("themeToggleBtn").addEventListener("click", () => {
+        const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        applyTheme(next);
+        showSnackbar(next === "dark" ? "Đã chuyển sang giao diện Tối" : "Đã chuyển sang giao diện Sáng");
+      });
+
+      document.getElementById("inputA").addEventListener("input", (e) => {
+        const v = parseInt(e.target.value, 10);
+        if (!Number.isNaN(v) && v >= 1) {
+          state.A = v;
+          updateAll();
+        }
+      });
+
+      document.getElementById("inputB").addEventListener("input", (e) => {
+        const v = parseInt(e.target.value, 10);
+        if (!Number.isNaN(v) && v >= 1) {
+          state.driver = "B";
+          state.B = v;
+          updateAll();
+        }
+      });
+
+      document.getElementById("inputC").addEventListener("input", (e) => {
+        const v = parseInt(e.target.value, 10);
+        if (!Number.isNaN(v) && v >= 1) {
+          state.driver = "C";
+          state.C = v;
+          updateAll();
+        }
+      });
+
+      document.getElementById("inputStartDate").addEventListener("change", (e) => {
+        if (e.target.value) {
+          state.startDateStr = e.target.value;
+          updateAll();
+        }
+      });
+
+      document.getElementById("inputEndDate").addEventListener("change", (e) => {
+        if (e.target.value) {
+          state.endDateStr = e.target.value;
+          updateAll();
+        }
+      });
+
+      document.getElementById("inputHolidays").addEventListener("input", (e) => {
+        state.holidaysText = e.target.value;
+        updateAll();
+      });
+
+      // Remove individual holiday chip
+      document.getElementById("holidayChips").addEventListener("click", (e) => {
+        const btn = e.target.closest(".m3-chip-close");
+        if (!btn) return;
+        const removeIdx = Number(btn.dataset.tokIdx);
+        const tokens = state.holidaysText.split(/[\n\r;,]+/);
+        const next = tokens
+          .map((t) => t.trim())
+          .filter((_, idx) => idx !== removeIdx && tokens[idx].trim() !== "")
+          .join("\n");
+        state.holidaysText = next;
+        document.getElementById("inputHolidays").value = next;
+        updateAll();
+        showSnackbar("Đã xóa ngày nghỉ");
+      });
+
+      document.getElementById("toggleRangePickerBtn").addEventListener("click", () => {
+        document.getElementById("rangeDrawer").classList.toggle("open");
+      });
+
+      document.getElementById("addRangeBtn").addEventListener("click", () => {
+        const s = parseIso(document.getElementById("pickStart").value);
+        const e = parseIso(document.getElementById("pickEnd").value);
+        if (!s) {
+          showSnackbar("Vui lòng chọn ngày bắt đầu nghỉ.");
+          return;
+        }
+        let line = toVNDate(s);
+        if (e && e.getTime() !== s.getTime()) {
+          const d1 = s <= e ? s : e;
+          const d2 = s <= e ? e : s;
+          line = `${toVNDate(d1)} - ${toVNDate(d2)}`;
+        }
+        const cur = document.getElementById("inputHolidays").value.trim();
+        const next = cur ? `${cur}\n${line}` : line;
+        document.getElementById("inputHolidays").value = next;
+        state.holidaysText = next;
+        document.getElementById("pickStart").value = "";
+        document.getElementById("pickEnd").value = "";
+        updateAll();
+        showSnackbar(`Đã thêm ngày nghỉ: ${line}`);
+      });
+
+      document.getElementById("clearHolidaysBtn").addEventListener("click", () => {
+        document.getElementById("inputHolidays").value = "";
+        state.holidaysText = "";
+        updateAll();
+        showSnackbar("Đã xóa toàn bộ ngày nghỉ.");
+      });
+
+      document.getElementById("lookupInput").addEventListener("input", (e) => {
+        state.lookupQuery = e.target.value;
+        renderUI();
+      });
+
+      document.getElementById("tabSchedule").addEventListener("click", () => {
+        state.activeTab = "schedule";
+        renderUI();
+      });
+
+      document.getElementById("tabReport").addEventListener("click", () => {
+        state.activeTab = "report";
+        renderUI();
+      });
+
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        const defaults = getDefaultDates();
+        state.A = 1300;
+        state.B = 50;
+        state.C = 26;
+        state.driver = "B";
+        state.startDateStr = defaults.startStr;
+        state.endDateStr = defaults.endStr;
+        state.holidaysText = "";
+        state.lookupQuery = "";
+        state.activeTab = "schedule";
+
+        document.getElementById("inputA").value = 1300;
+        document.getElementById("inputB").value = 50;
+        document.getElementById("inputC").value = 26;
+        document.getElementById("inputStartDate").value = state.startDateStr;
+        document.getElementById("inputEndDate").value = state.endDateStr;
+        document.getElementById("inputHolidays").value = "";
+        document.getElementById("lookupInput").value = "";
+        updateAll();
+        showSnackbar("Đã khôi phục thông số mặc định.");
+      });
+
+      document.getElementById("exportExcelBtn").addEventListener("click", handleExportExcel);
+      document.getElementById("printBtn").addEventListener("click", handlePrint);
+    });
+  </script>
 </body>
 </html>
