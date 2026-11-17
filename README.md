@@ -9,9 +9,7 @@
 
 ---
 
-## 📖 Giới thiệu
-
-**Công cụ tính lịch hẹn bệnh nhân** là ứng dụng web chạy hoàn toàn trên trình duyệt (client-side), giúp các cơ sở y tế và bác sĩ lập kế hoạch hẹn tái khám cho bệnh nhân một cách khoa học, chính xác và nhanh chóng.
+## 📖 Thông báo miễn trừ trách nhiệm
 
 **Công cụ được bác sĩ Thái phát triển, đang trong quá trình thử nghiệm giao đoạn alpha, nên có thể còn lỗi xảy ra. Vui lòng kiểm tra lại kĩ lịch hẹn trước khi quyết định sử dụng**
 
